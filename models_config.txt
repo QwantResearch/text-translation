@@ -6,3 +6,5 @@ en	fr	resources/en-fr/en.bpe	resources/en-fr/model.en-fr.cpu	generic
 en	de	resources/en-de/en.bpe	resources/en-de/model.en-de.cpu	generic
 en	nl	resources/en-nl/en.bpe	resources/en-nl/model.en-nl.cpu	generic
 en	pt	resources/en-pt/en.bpe	resources/en-pt/model.en-pt.cpu	generic
+fr	en	resources/fr-en/fr.bpe	resources/fr-en/model.fr-en.wiki.cpu	wiki
+en	fr	resources/en-fr/en.bpe	resources/en-fr/model.en-fr.wiki.cpu	wiki

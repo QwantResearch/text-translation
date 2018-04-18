@@ -25,7 +25,7 @@ class BPEEngine(object):
         self._bpe={}
         
     def apply_bpe_function(self, text,src_language,tgt_language):
-        sys.stderr.write("PROCESS BPE: "+str(src_language)+"-"+str(tgt_language)+"\n BPE: "+text+"\n")
+        sys.stderr.write("PROCESS BPE: "+str(src_language)+"-"+str(tgt_language)+"\n BPE MODEL: "+text+"\n")
         if src_language+"-"+tgt_language in self._bpe:
             return self._bpe[str(src_language)+"-"+str(tgt_language)].segment(text.strip())
         else:
@@ -43,19 +43,21 @@ class TRANSEngine(object):
     # initializing translation models
         self._transmodel={}
         
-    def translate_function(self, text,src_language,tgt_language):
-        sys.stderr.write("ASK TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
+    def translate_function(self, text,src_language,tgt_language,l_domain):
+        sys.stderr.write("ASK TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+"\n")
         if src_language+"-"+tgt_language in self._transmodel:
-            l_translated = self._transmodel[str(src_language)+"-"+str(tgt_language)].process_translation(text.strip())
-            sys.stderr.write("TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+" ||| "+l_translated+"\n")
+            l_translated = self._transmodel[str(src_language)+"-"+str(tgt_language)][l_domain].process_translation(text.strip())
+            sys.stderr.write("TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+" ||| "+l_translated+"\n")
             return l_translated
         else:
             sys.stderr.write("TRANSLATION ERROR: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
             return "None"
 
-    def set_translation_model(self,model_filename,bpe_filename,src_language,tgt_language):
-        sys.stderr.write("SET MODEL: "+str(src_language)+"-"+str(tgt_language)+"\n Model: "+model_filename+"\n BPE: "+bpe_filename+"\n")
-        self._transmodel[str(src_language)+"-"+str(tgt_language)] = qtranslate.qtranslate(model_filename,bpe_filename,src_language,tgt_language,2)
+    def set_translation_model(self,model_filename,bpe_filename,src_language,tgt_language,l_domain):
+        sys.stderr.write("SET MODEL: "+str(src_language)+"-"+str(tgt_language)+"\n Model: "+model_filename+"\n DOMAIN: "+l_domain+"\n")
+        if str(src_language)+"-"+str(tgt_language) not in self._transmodel:
+            self._transmodel[str(src_language)+"-"+str(tgt_language)]={}
+        self._transmodel[str(src_language)+"-"+str(tgt_language)][l_domain] = qtranslate.qtranslate(model_filename,bpe_filename,src_language,tgt_language,2)
 
     def apply_bpe_function_new(self, text,src_language,tgt_language):
         sys.stderr.write("BPE: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
@@ -71,7 +73,7 @@ class TRANSEngine(object):
 
         sys.stderr.write("TOKENIZE: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
         if src_language+"-"+tgt_language in self._transmodel:
-            l_tokenized=self._transmodel[src_language+"-"+tgt_language].tokenize_str(text.strip())
+            l_tokenized=self._transmodel[src_language+"-"+tgt_language]["generic"].tokenize_str(text.strip())
             sys.stderr.write(l_tokenized+"\n")
             return l_tokenized
         else:
@@ -81,7 +83,13 @@ class TRANSEngine(object):
     def get_language_pairs(self):
         l_lp=[]
         for l_keys in self._transmodel.keys():
-            l_lp.append(l_keys)
+            for l_domain in self._transmodel[l_keys].keys():
+                l_lp.append(l_keys+"-"+l_domain)
+        return l_lp
+    def get_domains(self,src_language,tgt_language):
+        l_lp=[]
+        for l_domain in self._transmodel[src_language+"-"+tgt_language].keys():
+            l_lp.append(l_domain)
         return l_lp
 
 class AuthMiddleware(object):
@@ -193,7 +201,16 @@ class TranslationResource(object):
             doc["tokenized"]=self.transmodel.tokenize(doc["text"],doc["source"],doc["target"])
             doc["BPE"]=self.bpe.apply_bpe_function(doc["tokenized"],doc["source"],doc["target"])
             doc["result"]=[]
-            doc["result"].append({"generic_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function(doc["tokenized"],doc["source"],doc["target"])]})
+            if "domain" in doc:
+                if doc["domain"] == "":
+                    doc["domain"] = "all"
+            else:
+                doc["domain"] = "all"
+            if doc["domain"] == "all":
+                for l_domain in self.transmodel.get_domains(doc["source"],doc["target"]):
+                    doc["result"].append({l_domain+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function(doc["BPE"],doc["source"],doc["target"],l_domain)]})
+            else:
+                doc["result"].append({doc["domain"]+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function(doc["BPE"],doc["source"],doc["target"],doc["domain"])]})
         else:
             doc["tokenized"]=""
             doc["BPE"]=""
@@ -229,6 +246,7 @@ class LanguageResource(object):
         doc={}
         doc["language_pairs"]=[]
         doc["language_pairs"]=self.transmodel.get_language_pairs()
+        # doc["language_domains"]=self.transmodel.get_language_pairs()
         doc["languages"]={}
         doc["languages"]=self.get_language_data()
         resp.context['result'] = doc
@@ -245,7 +263,7 @@ bpe = BPEEngine()
 transEngine = TRANSEngine()
 for lines in fconfig:
     l_data=lines.split()
-    transEngine.set_translation_model(l_data[3],l_data[2],l_data[0],l_data[1])
+    transEngine.set_translation_model(l_data[3],l_data[2],l_data[0],l_data[1],l_data[4])
     bpe.set_bpe_model(l_data[2],l_data[0],l_data[1])
 
 translate = TranslationResource(bpe,transEngine)
