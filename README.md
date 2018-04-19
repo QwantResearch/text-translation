@@ -14,7 +14,7 @@ Contact: c.servan@qwantresearch.com
   sudo -H python3 -m pip --upgrade pytest pybind11 falcon requests json wsgiref falcon falcon_cors 
   
   pushd eigen-git-mirror && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd 
-  pushd CTranslate && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd
+  pushd CTranslate && git submodule update --init && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd
   cd qtranslate/libCTranslate/ && bash compile.bash 
   
 ``` 
