@@ -15,7 +15,8 @@ from falcon_cors import CORS
 globalcors=CORS(allow_all_origins=True,allow_all_headers=True,allow_all_methods=True)
 
 # IP and port ask for the API
-inet='localhost'
+# inet='localhost'
+inet='172.30.1.5'
 iport=8888
 
 class BPEEngine(object):
@@ -219,8 +220,8 @@ class TranslationResource(object):
                 'Missing thing',
                 'A thing must be submitted in the request body.')
         if len(doc["text"]) > 0:
-            doc["tokenized"]=self.transmodel.tokenize(doc["text"],doc["source"],doc["target"])
-            doc["BPE"]=self.bpe.apply_bpe_function(doc["tokenized"],doc["source"],doc["target"])
+            # doc["tokenized"]=self.transmodel.tokenize(doc["text"],doc["source"],doc["target"])
+            # doc["BPE"]=self.bpe.apply_bpe_function(doc["tokenized"],doc["source"],doc["target"])
             doc["result"]=[]
             if "domain" in doc:
                 if doc["domain"] == "":
@@ -229,12 +230,12 @@ class TranslationResource(object):
                 doc["domain"] = "all"
             if doc["domain"] == "all":
                 for l_domain in self.transmodel.get_domains(doc["source"],doc["target"]):
-                    doc["result"].append({l_domain+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function(doc["BPE"],doc["source"],doc["target"],l_domain)]})
+                    doc["result"].append({l_domain+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function_all_preprocess(doc["text"],doc["source"],doc["target"],l_domain)]})
             else:
-                doc["result"].append({doc["domain"]+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function(doc["BPE"],doc["source"],doc["target"],doc["domain"])]})
+                doc["result"].append({doc["domain"]+"_model_"+doc["source"]+"-"+doc["target"]:[self.transmodel.translate_function_all_preprocess(doc["text"],doc["source"],doc["target"],doc["domain"])]})
         else:
-            doc["tokenized"]=""
-            doc["BPE"]=""
+            # doc["tokenized"]=""
+            # doc["BPE"]=""
             doc["result"]=[]
         resp.context['result'] = doc
         resp.set_header('Powered-By', 'Qwant Research')
