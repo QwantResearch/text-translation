@@ -3,26 +3,31 @@
 // #include <boost/program_options.hpp>
 // #include <chrono>
 // #include <algorithm>
-#include "tokenizer.h"
+#include "qnlp/tokenizer.h"
+#include "qnlp/en_tokenizer.h"
+#include "qnlp/fr_tokenizer.h"
 #include <onmt/onmt.h>
-#include "bpe.h"
+#include "qnlp/bpe.h"
 #include "BatchReader.h"
 #include "BatchWriter.h"
 
 // namespace po = boost::program_options;
 
 #include <pybind11/pybind11.h>
+#include "../../../../../../../usr/local/include/qnlp/fr_tokenizer.h"
 
 using namespace pybind11;
 using namespace std;
-using namespace webee;
+using namespace qnlp;
 
 class qtranslate
 {
     public:
         std::unique_ptr<onmt::ITranslator> _translator;
         BPE * _BPE;
-        webee::Tokenizer * _tokenizer;
+        qnlp::Tokenizer * _tokenizer;
+        qnlp::Tokenizer_fr * _fr_tokenizer;
+        qnlp::Tokenizer_en * _en_tokenizer;
         string _src_lang;
         string _tgt_lang;
         qtranslate(string &translation_model_filename, string &BPE_model_filename, string &src_lang, string &tgt_lang, size_t threads)
@@ -37,8 +42,19 @@ class qtranslate
                                                         5, // beam size
                                                         false, // use cuda
                                                         false); // output per module computation time
-            _BPE = new BPE(BPE_model_filename);
-            _tokenizer = new webee::Tokenizer(false,false,false,false,src_lang);
+            _BPE = new qnlp::BPE(BPE_model_filename);
+            if (src_lang == "fr")
+            {
+                _fr_tokenizer = new qnlp::Tokenizer_fr(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
+            else if (src_lang == "en")
+            {
+                _en_tokenizer = new qnlp::Tokenizer_en(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
+            else
+            {
+                _tokenizer = new qnlp::Tokenizer(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
         }
         void load_translation_model(string &filename, size_t threads)
         {
@@ -51,53 +67,64 @@ class qtranslate
                                                         false, // use cuda
                                                         false); // output per module computation time
         }
+        void load_BPE_model(string &BPE_model_filename)
+        {
+            _BPE = new qnlp::BPE(BPE_model_filename);
+        }
+        void set_tokenizer(string &lang)
+        {
+            if (_src_lang == "fr")
+            {
+                _fr_tokenizer = new qnlp::Tokenizer_fr(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
+            else if (_src_lang == "en")
+            {
+                _en_tokenizer = new qnlp::Tokenizer_en(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
+            else
+            {
+                _tokenizer = new qnlp::Tokenizer(qnlp::Tokenizer::PLAIN,false,false,false,false);
+            }
+        }
         vector<string> tokenize(string &input)
         {
-            vector<string> to_return=_tokenizer->tokenize_sentence(input);
+            vector<string> to_return;
+            if (_src_lang == "fr")
+            {
+                to_return=_fr_tokenizer->tokenize_sentence(input);
+            }
+            else if (_src_lang == "en")
+            {
+                to_return=_en_tokenizer->tokenize_sentence(input);
+            }
+            else
+            {
+                to_return=_tokenizer->tokenize_sentence(input);
+            }
             return to_return;
         }
         string tokenize_str(string &input)
         {
-            // cerr << "INSIDE:" << input << endl;
-            vector<string> to_return=_tokenizer->tokenize_sentence(input);
-            // cerr << "INSIDE2:" << input << endl;
-            stringstream l_out;
-            l_out.str("");
-            for (int i=0; i < (int)to_return.size(); i++)
+            if (_src_lang == "fr")
             {
-                if (i == (int)to_return.size()-1)
-                {
-                    l_out << to_return[i];
-                }
-                else
-                {
-                    l_out << to_return[i] << " ";
-                }
+                return _fr_tokenizer->tokenize_sentence_to_string(input);
             }
-            return l_out.str();
+            else if (_src_lang == "en")
+            {
+                return _en_tokenizer->tokenize_sentence_to_string(input);
+            }
+            else
+            {
+                return _tokenizer->tokenize_sentence_to_string(input);
+            }
         }
         string apply_bpe(string &input)
         {
-            // cerr << input << endl;
-            stringstream l_out;
-            l_out.str("");
-            vector<string> vec0=tokenize(input);
-            // cerr << endl;
-            vector<vector<string>> vec=_BPE->Preprocess(vec0);
-            for (int i=0; i < (int)vec.size(); i++)
-            {
-                for(int j=0; j < (int)vec.at(i).size(); j++)
-                {
-                      if (i == (int)vec.size()-1  && j == (int)vec.at(i).size()-1) l_out << vec.at(i).at(j);
-                      else l_out << vec.at(i).at(j)  << " ";
-                }
-            }
-            return l_out.str();
+            return _BPE->apply_bpe_to_string(input);
         }
-        string apply_bpe_vec(string &input)
+        vector<string> apply_bpe_vec(string &input)
         {
-            string to_return="";
-            return to_return;
+            return _BPE->apply_bpe(input);
         }
         string detokenize(string &input)
         {
@@ -149,7 +176,7 @@ class qtranslate
               }
             string trans = oss.str();
             // string trans = _translator->translate(input);
-            trans = detokenize(trans);
+            trans = detokenize(trans);  
             return trans;
         }
 };

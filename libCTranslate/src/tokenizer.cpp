@@ -142,20 +142,20 @@ vector<string> Tokenizer::tokenize_sentence(string& text)
     vector<string> to_return;
     _sb = iss.rdbuf();
     string l_token;
-    // cerr << "Mon test BEFORE : " << text << endl;
+    cerr << "Mon test BEFORE : " << text << endl;
     while(read (l_token,false)) 
     {
         if(!l_token.empty()) 
         {
                 to_return.push_back(l_token);
-                // cerr << "Mon test : " << l_token << endl;
+                cerr << "Mon test : " << l_token << endl;
         }
 //         l_token_pred = l_token;
     }
     if(!l_token.empty()) 
     {
             to_return.push_back(l_token);
-            // cerr << "Mon test : " << l_token << endl;
+            cerr << "Mon test : " << l_token << endl;
     }
     return to_return;
 }
@@ -692,7 +692,6 @@ bool Tokenizer::default_processing(string& token, char& c)
                 break;
             default:
                 _sb->sungetc();
-                return true;
                 break;
         }
         _sb->sungetc();
