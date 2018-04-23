@@ -8,13 +8,14 @@ import falcon
 import requests
 import apply_bpe
 import codecs
+#import lib.libqtranslate as qtranslate
 import qtranslate
 from falcon_cors import CORS
 
 globalcors=CORS(allow_all_origins=True,allow_all_headers=True,allow_all_methods=True)
 
 # IP and port ask for the API
-inet='172.30.1.5'
+inet='localhost'
 iport=8888
 
 class BPEEngine(object):
@@ -47,6 +48,26 @@ class TRANSEngine(object):
         sys.stderr.write("ASK TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+"\n")
         if src_language+"-"+tgt_language in self._transmodel:
             l_translated = self._transmodel[str(src_language)+"-"+str(tgt_language)][l_domain].process_translation(text.strip())
+            sys.stderr.write("TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+" ||| "+l_translated+"\n")
+            return l_translated
+        else:
+            sys.stderr.write("TRANSLATION ERROR: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
+            return "None"
+
+    def translate_function_bpe(self, text,src_language,tgt_language,l_domain):
+        sys.stderr.write("ASK TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+"\n")
+        if src_language+"-"+tgt_language in self._transmodel:
+            l_translated = self._transmodel[str(src_language)+"-"+str(tgt_language)][l_domain].process_translation_with_bpe(text.strip())
+            sys.stderr.write("TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+" ||| "+l_translated+"\n")
+            return l_translated
+        else:
+            sys.stderr.write("TRANSLATION ERROR: "+str(src_language)+"-"+str(tgt_language)+" ||| "+text+"\n")
+            return "None"
+
+    def translate_function_all_preprocess(self, text,src_language,tgt_language,l_domain):
+        sys.stderr.write("ASK TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+"\n")
+        if src_language+"-"+tgt_language in self._transmodel:
+            l_translated = self._transmodel[str(src_language)+"-"+str(tgt_language)][l_domain].process_translation_with_all_preprocess(text.strip())
             sys.stderr.write("TRANSLATION: "+str(src_language)+"-"+str(tgt_language)+" ||| "+l_domain+" ||| "+text+" ||| "+l_translated+"\n")
             return l_translated
         else:

@@ -126,6 +126,10 @@ class qtranslate
         {
             return _BPE->apply_bpe(input);
         }
+        string apply_bpe_vec_to_str(vector<string> &input)
+        {
+            return _BPE->apply_bpe_to_string(input);
+        }
         string detokenize(string &input)
         {
             vector<int> pos;
@@ -152,30 +156,52 @@ class qtranslate
             std::unique_ptr<BatchWriter> writer;
             writer.reset(new BatchWriter(oss));
 
-              // std::chrono::high_resolution_clock::time_point t1, t2;
-
-              // double total_time_s = 0;
-              // size_t num_sents = 0;
 
               for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                // if (vm["time"].as<bool>())
-                  // t1 = std::chrono::high_resolution_clock::now();
-
                 auto trans = _translator->translate_batch(batch);
-
-                // if (vm["time"].as<bool>())
-                // {
-                  // t2 = std::chrono::high_resolution_clock::now();
-                  // std::chrono::duration<float> sec = t2 - t1;
-                  // total_time_s += sec.count();
-                  // num_sents += batch.size();
-                // }
-
                 writer->write(trans);
               }
             string trans = oss.str();
-            // string trans = _translator->translate(input);
+            trans = detokenize(trans);  
+            return trans;
+        }
+        string process_translation_with_BPE(string &input)
+        {
+            istringstream iss(apply_bpe(input));
+            ostringstream oss("");
+            std::unique_ptr<BatchReader> reader;
+            reader.reset(new BatchReader(iss, 16));
+            std::unique_ptr<BatchWriter> writer;
+            writer.reset(new BatchWriter(oss));
+
+
+              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
+              {
+                auto trans = _translator->translate_batch(batch);
+                writer->write(trans);
+              }
+            string trans = oss.str();
+            trans = detokenize(trans);  
+            return trans;
+        }
+        string process_translation_with_all_preprocess(string &input)
+        {
+            vector<string> tokenized= tokenize(input);
+            istringstream iss(apply_bpe_vec_to_str(tokenized));
+            ostringstream oss("");
+            std::unique_ptr<BatchReader> reader;
+            reader.reset(new BatchReader(iss, 16));
+            std::unique_ptr<BatchWriter> writer;
+            writer.reset(new BatchWriter(oss));
+
+
+              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
+              {
+                auto trans = _translator->translate_batch(batch);
+                writer->write(trans);
+              }
+            string trans = oss.str();
             trans = detokenize(trans);  
             return trans;
         }
@@ -192,6 +218,8 @@ PYBIND11_MODULE(qtranslate, t)
         .def("tokenize_str", &qtranslate::tokenize_str)
         .def("apply_bpe", &qtranslate::apply_bpe)
         .def("apply_bpe_vec", &qtranslate::apply_bpe_vec)
+        .def("process_translation_with_BPE", &qtranslate::process_translation_with_BPE)
+        .def("process_translation_with_all_preprocess", &qtranslate::process_translation_with_all_preprocess)
         .def("process_translation", &qtranslate::process_translation);
 }
 
