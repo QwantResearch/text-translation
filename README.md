@@ -15,7 +15,7 @@ Contact: c.servan@qwantresearch.com
   
   pushd eigen-git-mirror && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd 
   pushd CTranslate && git submodule update --init && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd
-  cd qtranslate/libCTranslate/ && bash compile.bash 
+  cd qtranslate/libCTranslate/ && bash cbuild.sh 
   
 ``` 
 
