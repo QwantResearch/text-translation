@@ -15,8 +15,8 @@ from falcon_cors import CORS
 globalcors=CORS(allow_all_origins=True,allow_all_headers=True,allow_all_methods=True)
 
 # IP and port ask for the API
-# inet='localhost'
-inet='172.30.1.5'
+inet='localhost'
+# inet='172.30.1.5'
 iport=8888
 
 class BPEEngine(object):
