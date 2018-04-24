@@ -21,7 +21,9 @@ std::vector<std::string> BatchReader::read_next()
   std::string line;
 
   while (batch.size() < _batch_size && std::getline(_in, line))
-    batch.push_back(line);
+  {
+      batch.push_back(line);
+  }
 
   return batch;
 }

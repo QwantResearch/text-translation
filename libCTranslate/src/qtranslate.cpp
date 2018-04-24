@@ -14,7 +14,7 @@
 // namespace po = boost::program_options;
 
 #include <pybind11/pybind11.h>
-#include "../../../../../../../usr/local/include/qnlp/fr_tokenizer.h"
+// #include "../../../../../../../usr/local/include/qnlp/fr_tokenizer.h"
 
 using namespace pybind11;
 using namespace std;
@@ -89,6 +89,10 @@ class qtranslate
         vector<string> tokenize(string &input)
         {
             vector<string> to_return;
+            if (count_spaces(input) > 70)
+            {
+                cut_sentence(input);
+            }
             if (_src_lang == "fr")
             {
                 to_return=_fr_tokenizer->tokenize_sentence(input);
@@ -120,7 +124,12 @@ class qtranslate
         }
         string apply_bpe(string &input)
         {
-            return _BPE->apply_bpe_to_string(input);
+            string to_return=_BPE->apply_bpe_to_string(input);
+            if (count_spaces(to_return) > 70)
+            {
+                cut_sentence(to_return);
+            }
+            return to_return;
         }
         vector<string> apply_bpe_vec(string &input)
         {
@@ -157,9 +166,9 @@ class qtranslate
             writer.reset(new BatchWriter(oss));
 
 
-              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
+              for (vector<string> batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                auto trans = _translator->translate_batch(batch);
+                vector<string> trans = _translator->translate_batch(batch);
                 writer->write(trans);
               }
             string trans = oss.str();
@@ -176,9 +185,9 @@ class qtranslate
             writer.reset(new BatchWriter(oss));
 
 
-              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
+              for (vector<string> batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                auto trans = _translator->translate_batch(batch);
+                vector<string> trans = _translator->translate_batch(batch);
                 writer->write(trans);
               }
             string trans = oss.str();
@@ -188,23 +197,106 @@ class qtranslate
         string process_translation_with_all_preprocess(string &input)
         {
             vector<string> tokenized= tokenize(input);
-            istringstream iss(apply_bpe_vec_to_str(tokenized));
+            string BPEed=apply_bpe_vec_to_str(tokenized);
+            if (count_spaces(BPEed) > 70)
+            {
+                cut_sentence(BPEed);
+            }
+//             protect_paragraph(BPEed);
+            istringstream iss(BPEed);
             ostringstream oss("");
             std::unique_ptr<BatchReader> reader;
             reader.reset(new BatchReader(iss, 16));
             std::unique_ptr<BatchWriter> writer;
             writer.reset(new BatchWriter(oss));
-
-
-              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
-              {
-                auto trans = _translator->translate_batch(batch);
+            for (vector<string> batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
+            {
+                vector<int> ids = pre_process_batch(batch);
+                vector<string> trans = _translator->translate_batch(batch);
+                post_process_batch(trans,ids);
                 writer->write(trans);
-              }
+            }
             string trans = oss.str();
             trans = detokenize(trans);  
             return trans;
         }
+        int count_spaces(string &text) 
+        {
+            int count = 0;
+            for (int i = 0; i < (int)text.size(); i++) 
+            {
+                if (text[i] == ' ') 
+                {      
+                    count++;
+                }
+            }
+            return count;
+        }
+        void cut_sentence_txt(string &text) 
+        {
+            for (int i = 0; i < (int)text.size()-3; i++) 
+            {
+                if (text[i] >= 'a' && text[i] <= 'z' && text[i+1] == '.' && text[i+2] == ' ') 
+                {      
+                    text[i+2] = '\n';
+                }
+            }
+        }
+        void cut_sentence(string &text) 
+        {
+            int count = 0;
+            for (int i = 0; i < (int)text.size()-3; i++) 
+            {
+                if (text[i] == ' ') 
+                {      
+                    count++;
+                }
+                if (text[i] == ' ' && text[i+1] == '.' && text[i+2] == ' ' && count > 70) 
+                {      
+                    text[i+2] = '\n';
+                    count = 0;
+                }
+            }
+        }
+        vector<int> pre_process_batch(vector<string> &batch)
+        {
+            vector<int> l_list;
+            for (int i=0; i<(int)batch.size(); i++)
+            {
+                if (batch.at(i).length() < 1) 
+                {      
+                    l_list.push_back(i);
+                }                
+            }
+            for (int i = (int)l_list.size()-1; i > -1; i--) 
+            {
+                batch.erase(batch.begin()+l_list[i]);
+            }
+            return l_list;
+        }
+        void post_process_batch(vector<string> &batch, vector<int> l_list)
+        {
+            for (int i=0; i<(int)l_list.size(); i++)
+            {
+                batch.insert(batch.begin()+l_list[i],"");
+            }
+        }
+//         void protect_paragraph(string &text) 
+//         {
+//             int count = 0;
+//             vector<int> l_list;
+//             for (int i = 0; i < (int)text.size()-2; i++) 
+//             {
+//                 if (text[i] == '\n' && text[i+1] == '\n') 
+//                 {      
+//                     l_list.push_back(i);
+//                 }
+//             }
+//             for (int i = (int)l_list.size()-1; i > -1; i--) 
+//             {
+//                 text.insert(l_list[i]+1,"@@ ");
+//             }
+//         }
 };
 
 
@@ -223,93 +315,3 @@ PYBIND11_MODULE(qtranslate, t)
         .def("process_translation", &qtranslate::process_translation);
 }
 
-        // .def("load_translation_model", &qtranslate::load_translation_model)
-
-/*
-int main(int argc, char* argv[])
-{
-  po::options_description desc("OpenNMT Translator");
-  desc.add_options()
-    ("help", "display available options")
-    ("model", po::value<std::string>(), "path to the OpenNMT model")
-    ("src", po::value<std::string>(), "path to the file to translate (read from the standard input if not set)")
-    ("tgt", po::value<std::string>(), "path to the output file (write to the standard output if not set")
-    ("phrase_table", po::value<std::string>()->default_value(""), "path to the phrase table")
-    ("replace_unk", po::bool_switch()->default_value(false), "replace unknown tokens by source tokens with the highest attention")
-    ("batch_size", po::value<size_t>()->default_value(30), "batch size")
-    ("beam_size", po::value<size_t>()->default_value(5), "beam size")
-    ("max_sent_length", po::value<size_t>()->default_value(250), "maximum sentence length to produce")
-    ("time", po::bool_switch()->default_value(false), "output average translation time")
-    ("profiler", po::bool_switch()->default_value(false), "output per module computation time")
-    ("threads", po::value<size_t>()->default_value(0), "number of threads to use (set to 0 to use the number defined by OpenMP)")
-    ("cuda", po::bool_switch()->default_value(false), "use cuda when available")
-    ;
-
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help"))
-  {
-    std::cerr << desc << std::endl;
-    return 1;
-  }
-
-  if (!vm.count("model"))
-  {
-    std::cerr << "missing model" << std::endl;
-    return 1;
-  }
-
-  if (vm["threads"].as<size_t>() > 0)
-    onmt::Threads::set(vm["threads"].as<size_t>());
-
-  auto translator = onmt::TranslatorFactory::build(vm["model"].as<std::string>(),
-                                                   vm["phrase_table"].as<std::string>(),
-                                                   vm["replace_unk"].as<bool>(),
-                                                   vm["max_sent_length"].as<size_t>(),
-                                                   vm["beam_size"].as<size_t>(),
-                                                   vm["cuda"].as<bool>(),
-                                                   vm["profiler"].as<bool>());
-
-  std::unique_ptr<BatchReader> reader;
-  if (vm.count("src"))
-    reader.reset(new BatchReader(vm["src"].as<std::string>(), vm["batch_size"].as<size_t>()));
-  else
-    reader.reset(new BatchReader(std::cin, vm["batch_size"].as<size_t>()));
-
-  std::unique_ptr<BatchWriter> writer;
-  if (vm.count("tgt"))
-    writer.reset(new BatchWriter(vm["tgt"].as<std::string>()));
-  else
-    writer.reset(new BatchWriter(std::cout));
-
-  std::chrono::high_resolution_clock::time_point t1, t2;
-
-  double total_time_s = 0;
-  size_t num_sents = 0;
-
-  for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
-  {
-    if (vm["time"].as<bool>())
-      t1 = std::chrono::high_resolution_clock::now();
-
-    auto trans = translator->translate_batch(batch);
-
-    if (vm["time"].as<bool>())
-    {
-      t2 = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<float> sec = t2 - t1;
-      total_time_s += sec.count();
-      num_sents += batch.size();
-    }
-
-    writer->write(trans);
-  }
-
-  if (vm["time"].as<bool>())
-    std::cerr << "avg real\t" << total_time_s / num_sents << std::endl;
-
-  return 0;
-}
-*/

@@ -16,3 +16,8 @@ void BatchWriter::write(const std::vector<std::string>& batch)
   for (const auto& sent: batch)
     _out << sent << std::endl;
 }
+void BatchWriter::write(const std::vector<std::string>& batch, std::vector<int>& ids)
+{
+  for (const auto& sent: batch)
+    _out << sent << std::endl;
+}

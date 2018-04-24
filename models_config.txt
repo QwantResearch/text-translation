@@ -1,1 +1,8 @@
-en	fr	resources/en-fr/en.bpe	resources/en-fr/model.en-fr.generic.cpu	generic
+fr	en	resources/fr-en/fr.bpe	resources/fr-en/model.fr-en.cpu	generic
+de	en	resources/de-en/de.bpe	resources/de-en/model.de-en.cpu	generic
+nl	en	resources/nl-en/nl.bpe	resources/nl-en/model.nl-en.cpu	generic
+pt	en	resources/pt-en/pt.bpe	resources/pt-en/model.pt-en.cpu	generic
+en	fr	resources/en-fr/en.bpe	resources/en-fr/model.en-fr.cpu	generic
+en	de	resources/en-de/en.bpe	resources/en-de/model.en-de.cpu	generic
+en	nl	resources/en-nl/en.bpe	resources/en-nl/model.en-nl.cpu	generic
+en	pt	resources/en-pt/en.bpe	resources/en-pt/model.en-pt.cpu	generic

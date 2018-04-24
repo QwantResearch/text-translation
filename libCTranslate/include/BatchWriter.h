@@ -11,6 +11,7 @@ public:
   BatchWriter(std::ostream& out);
 
   void write(const std::vector<std::string>& batch);
+  void write(const std::vector<std::string>& batch, std::vector<int>& ids);
 
 private:
   std::ofstream _file;
