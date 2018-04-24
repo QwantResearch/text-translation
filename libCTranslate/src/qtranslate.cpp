@@ -155,22 +155,13 @@ class qtranslate
             reader.reset(new BatchReader(iss, 16));
             std::unique_ptr<BatchWriter> writer;
             writer.reset(new BatchWriter(oss));
-            for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
-            {
-              if ((int)batch.size() > 0)
+
+
+              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                  if (((int)batch.size() == 1) && ((int)batch[0].size() < 2 ))
-                  {
-                      writer->write(batch);
-                  }
-                  auto trans = _translator->translate_batch(batch);
-                  writer->write(trans);
+                auto trans = _translator->translate_batch(batch);
+                writer->write(trans);
               }
-              else
-              {
-                  writer->write(batch);
-              }
-            }
             string trans = oss.str();
             trans = detokenize(trans);  
             return trans;
@@ -183,22 +174,13 @@ class qtranslate
             reader.reset(new BatchReader(iss, 16));
             std::unique_ptr<BatchWriter> writer;
             writer.reset(new BatchWriter(oss));
-            for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
-            {
-              if ((int)batch.size() > 0)
+
+
+              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                  if (((int)batch.size() == 1) && ((int)batch[0].size() < 2 ))
-                  {
-                      writer->write(batch);
-                  }
-                  auto trans = _translator->translate_batch(batch);
-                  writer->write(trans);
+                auto trans = _translator->translate_batch(batch);
+                writer->write(trans);
               }
-              else
-              {
-                  writer->write(batch);
-              }
-            }
             string trans = oss.str();
             trans = detokenize(trans);  
             return trans;
@@ -212,22 +194,13 @@ class qtranslate
             reader.reset(new BatchReader(iss, 16));
             std::unique_ptr<BatchWriter> writer;
             writer.reset(new BatchWriter(oss));
-            for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
-            {
-              if ((int)batch.size() > 0)
+
+
+              for (auto batch = reader->read_next(); !batch.empty(); batch = reader->read_next())
               {
-                  if (((int)batch.size() == 1) && ((int)batch[0].size() < 2 ))
-                  {
-                      writer->write(batch);
-                  }
-                  auto trans = _translator->translate_batch(batch);
-                  writer->write(trans);
+                auto trans = _translator->translate_batch(batch);
+                writer->write(trans);
               }
-              else
-              {
-                  writer->write(batch);
-              }
-            }
             string trans = oss.str();
             trans = detokenize(trans);  
             return trans;
