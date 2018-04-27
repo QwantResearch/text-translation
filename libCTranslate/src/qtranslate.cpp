@@ -198,10 +198,10 @@ class qtranslate
         {
             vector<string> tokenized= tokenize(input);
             string BPEed=apply_bpe_vec_to_str(tokenized);
-            if (count_spaces(BPEed) > 70)
-            {
+//             if (count_spaces(BPEed) > 70)
+//             {
                 cut_sentence(BPEed);
-            }
+//             }
 //             protect_paragraph(BPEed);
             istringstream iss(BPEed);
             ostringstream oss("");
