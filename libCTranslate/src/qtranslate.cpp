@@ -298,7 +298,7 @@ class qtranslate
                 if (((int)l_sent_output.size() > 0) && (((int)l_sent_input.size() / (int)l_sent_output.size()) > 3 || ((int)l_sent_output.size() / (int)l_sent_input.size()) > 3))
                 {
                     int osize=(int)l_sent_output.size();
-                    for (int j=osize-1; j > 1 ; j++)
+                    for (int j=osize-1; j > 0 ; j--)
                     {
                         if (l_sent_output[j] == l_sent_output[j-1])
                         {
