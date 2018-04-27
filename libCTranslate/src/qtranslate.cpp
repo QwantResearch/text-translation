@@ -215,6 +215,7 @@ class qtranslate
                 vector<int> ids = pre_process_batch(batch);
                 vector<string> trans = _translator->translate_batch(batch);
                 post_process_batch(trans,ids);
+                detect_anormalities(batch,trans);
                 writer->write(trans);
             }
             string trans = oss.str();
