@@ -244,6 +244,10 @@ class qtranslate
         }
         void cut_sentence(string &text) 
         {
+            cut_sentence_counts(text, 0);
+        }
+        void cut_sentence_counts(string &text, int count_limit) 
+        {
             int count = 0;
             for (int i = 0; i < (int)text.size()-3; i++) 
             {
@@ -251,7 +255,7 @@ class qtranslate
                 {      
                     count++;
                 }
-                if (text[i] == ' ' && text[i+1] == '.' && text[i+2] == ' ' && count > 70) 
+                if (text[i] == ' ' && text[i+1] == '.' && text[i+2] == ' ' && count > count_limit) 
                 {      
                     text[i+2] = '\n';
                     count = 0;
