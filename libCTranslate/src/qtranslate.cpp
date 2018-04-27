@@ -10,6 +10,7 @@
 #include "qnlp/bpe.h"
 #include "BatchReader.h"
 #include "BatchWriter.h"
+#include "utils.h"
 
 // namespace po = boost::program_options;
 
@@ -278,8 +279,38 @@ class qtranslate
             }
             return l_list;
         }
+        void detect_anormalities(vector<string> &batch, vector<string> &trans)
+        {
+            if (batch.size() != trans.size())
+            {
+                cerr << "Error input and ouput size differs" <<endl;
+                return;
+            }
+            vector<string> l_sent_input;  
+            vector<string> l_sent_output;  
+            for (int i=0; i<(int)batch.size(); i++)
+            {
+                l_sent_input.clear();
+                l_sent_output.clear();
+                Split(batch.at(i),l_sent_input," ");
+                Split(trans.at(i),l_sent_output," ");
+                if (((int)l_sent_output.size() > 0) && (((int)l_sent_input.size() / (int)l_sent_output.size()) > 3 || ((int)l_sent_output.size() / (int)l_sent_input.size()) > 3))
+                {
+                    int osize=(int)l_sent_output.size();
+                    for (int j=osize-1; j > 1 ; j++)
+                    {
+                        if (l_sent_output[j] == l_sent_output[j-1])
+                        {
+                            l_sent_output.erase (l_sent_output.begin()+j);
+                        }
+                    }
+                    trans.at(i)=Join(l_sent_output," ");
+                }
+            }
+        }
         void post_process_batch(vector<string> &batch, vector<int> l_list)
         {
+//             vector<string> l_sent=batch
             for (int i=0; i<(int)l_list.size(); i++)
             {
                 batch.insert(batch.begin()+l_list[i],"");
