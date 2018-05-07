@@ -31,3 +31,91 @@ Then:
   python3 translate_api.py
 ``` 
 
+## Query example
+
+### Translation route
+
+Ask for a translation:
+```
+curl -X POST \
+  http://localhost:8888/translate \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"This is a test to be sure what I do.","source":"en","target":"fr","count":10}'
+```
+which response:
+```
+{
+    "target": "fr",
+    "text": "This is a test to be sure what I do.",
+    "count": 10,
+    "source": "en",
+    "domain": "all",
+    "result": [
+        {
+            "generic_model_en-fr": [
+                "C' est un test pour être sûr de ce que je fais .\n"
+            ]
+        },
+        {
+            "full_model_en-fr": [
+                "C' est un test pour être sûr de ce que je fais .\n"
+            ]
+        }
+    ]
+}
+```
+
+### language route
+Ask which translation models are available:
+```
+curl -X GET \
+  http://localhost:8888/languages \
+  -H 'Authorization: customized-token' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json'
+```
+Which responds:
+```
+{
+    "language_pairs": [
+        "en-fr-generic",
+        "en-fr-full",
+        "fr-en-generic",
+    ],
+    "languages": {
+        "de": [
+            "Allemand",
+            "de"
+        ],
+        "pt": [
+            "Portugais",
+            "pt"
+        ],
+        "en": [
+            "Anglais",
+            "gb"
+        ],
+        "it": [
+            "Italien",
+            "it"
+        ],
+        "fr": [
+            "Français",
+            "fr"
+        ],
+        "es": [
+            "Espagnol",
+            "es"
+        ],
+        "cs": [
+            "Tchèque",
+            "cz"
+        ],
+        "nl": [
+            "Néerlandais",
+            "nl"
+        ]
+    }
+}
+```
