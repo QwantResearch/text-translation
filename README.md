@@ -2,6 +2,7 @@
 
 A new Python API for Neural Machine Translation (NMT) at Qwant Research.
 The API is based on OpenNMT a lua/Torch7 toolkit for MT.
+This API is multithreaded.
 
 Contact: c.servan@qwantresearch.com
 
