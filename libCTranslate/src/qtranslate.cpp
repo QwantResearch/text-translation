@@ -36,13 +36,26 @@ class qtranslate
             _src_lang = src_lang;
             _tgt_lang = tgt_lang;
             onmt::Threads::set(threads);
-            _translator = onmt::TranslatorFactory::build(translation_model_filename,
-                                                        "", // phrase table
-                                                        false, // replace unk
-                                                        250, // max length
-                                                        5, // beam size
-                                                        false, // use cuda
-                                                        false); // output per module computation time
+            _translator = std::vector<std::unique_ptr<onmt::ITranslator>> translator_pool;
+            translator_pool.emplace_back(onmt::TranslatorFactory::build(translation_model_filename,
+                                                              "",// phrase table
+                                                              "",// vocab mapping
+                                                              false, // replace unk
+                                                              250, // max length
+                                                              5, // beam size
+                                                              false, // use cuda
+                                                              false, // use qlinear
+                                                              false));
+            for (size_t i = 0; i < threads - 1; ++i) {
+              translator_pool.emplace_back(onmt::TranslatorFactory::clone(translator_pool.front()));
+            }
+//             _translator = onmt::TranslatorFactory::build(translation_model_filename,
+//                                                         "", // phrase table
+//                                                         false, // replace unk
+//                                                         250, // max length
+//                                                         5, // beam size
+//                                                         false, // use cuda
+//                                                         false); // output per module computation time
             _BPE = new qnlp::BPE(BPE_model_filename);
             if (src_lang == "fr")
             {
@@ -60,13 +73,19 @@ class qtranslate
         void load_translation_model(string &filename, size_t threads)
         {
             onmt::Threads::set(threads);
-            _translator = onmt::TranslatorFactory::build(filename,
-                                                        "", // phrase table
-                                                        false, // replace unk
-                                                        250, // max length
-                                                        5, // beam size
-                                                        false, // use cuda
-                                                        false); // output per module computation time
+            _translator = std::vector<std::unique_ptr<onmt::ITranslator>> translator_pool;
+            translator_pool.emplace_back(onmt::TranslatorFactory::build(translation_model_filename,
+                                                              "",// phrase table
+                                                              "",// vocab mapping
+                                                              false, // replace unk
+                                                              250, // max length
+                                                              5, // beam size
+                                                              false, // use cuda
+                                                              false, // use qlinear
+                                                              false));
+            for (size_t i = 0; i < threads - 1; ++i) {
+              translator_pool.emplace_back(onmt::TranslatorFactory::clone(translator_pool.front()));
+            }
         }
         void load_BPE_model(string &BPE_model_filename)
         {
