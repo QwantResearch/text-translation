@@ -1,122 +1,80 @@
-# Qtranslate
+# Qnlu
 
-A new Python API for Neural Machine Translation (NMT) at Qwant Research.
-The API is based on OpenNMT a lua/Torch7 toolkit for MT.
-This API is multithreaded.
+A new Python API for Machine Translation at Qwant Research.
+The API is based on tensorflow library.
 
-Contact: c.servan@qwantresearch.com
+Contact: christophe[dot]servan[at]qwantresearch[dot]com
 
 ## Installation
 
-```  git clone https://github.com/QwantResearch/qtranslate.git
-  git clone https://github.com/QwantResearch/CTranslate.git 
-  git clone https://github.com/QwantResearch/qnlp-toolkit.git 
-  git clone https://github.com/eigenteam/eigen-git-mirror.git 
-  
-  sudo -H python3 -m pip --upgrade pytest pybind11 falcon requests json wsgiref falcon falcon_cors 
-  
-  pushd eigen-git-mirror && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd 
-  pushd CTranslate && git submodule update --init && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd
-  pushd qnlp-toolkit && mkdir build && cd build && cmake .. && make -j4 && sudo make install && popd 
-  cd qtranslate/libCTranslate/ && bash cbuild.sh 
-  
+### Pre-requieres
+* install qnlp-toolkit (https://github.com/QwantResearch/qnlp-toolkit.git)
+* install pistache (https://github.com/oktal/pistache.git)
+* install nlohmann json (https://github.com/nlohmann/json.git)
+* compile tensorflow from source (see next session)
+
+### Install Tensorflow
+
+```
+git clone https://github.com/tensorflow/tensorflow.git ~/tensorflow
+cd ~/tensorflow
+git checkout r1.6
+```
+
+#### Add a custom compilation target at the end of ```tensorflow/BUILD```:
+```
+
+tf_cc_shared_object(
+    name = "libtensorflow_qnlp.so",
+    linkopts = select({
+        "//tensorflow:darwin": [
+            "-Wl,-exported_symbols_list",  # This line must be directly followed by the exported_symbols.lds file
+            "//tensorflow:tf_exported_symbols.lds",
+        ],
+        "//tensorflow:windows": [],
+        "//tensorflow:windows_msvc": [],
+        "//conditions:default": [
+            "-z defs",
+            "-s",
+            "-Wl,--version-script",  #  This line must be directly followed by the version_script.lds file
+            "//tensorflow:tf_version_script.lds",
+        ],
+    }),
+    deps = [
+        "//tensorflow:tf_exported_symbols.lds",
+        "//tensorflow:tf_version_script.lds",
+        "//tensorflow/c:c_api",
+        "//tensorflow/c/eager:c_api",
+        "//tensorflow/cc:cc_ops",
+        "//tensorflow/cc:client_session",
+        "//tensorflow/cc:scope",
+        "//tensorflow/core:tensorflow",
+        "//tensorflow/contrib/seq2seq:beam_search_ops_kernels",
+        "//tensorflow/contrib/seq2seq:beam_search_ops_op_lib",
+    ],
+)
+```
+#### Configure & build
+
+```
+./configure
+bazel build --config=opt //tensorflow:libtensorflow_qnlp.so
+```
+
+### Installation
+
+
+```
+  git clone https://github.com/QwantResearch/qtranslate.git 
+  git checkout cpp
+  mkdir -pv build && cd build && cmake .. && make 
 ``` 
+
 
 ## Launch the API
 
-Set up the models in the file `models_config.txt` and set the IP and desired listened port in the file `translate_api.py`.
-Then:
 
-```  
-  cd qtranslate
-  python3 translate_api.py
+```
+  ./api_nmt [#port] [#threads] [config filename]
 ``` 
 
-## Query example
-
-### Translation route
-
-Ask for a translation:
-```
-curl -X POST \
-  http://localhost:8888/translate \
-  -H 'Cache-Control: no-cache' \
-  -H 'Content-Type: application/json' \
-  -d '{"text":"This is a test to be sure what I do.","source":"en","target":"fr","count":10}'
-```
-which response:
-```
-{
-    "target": "fr",
-    "text": "This is a test to be sure what I do.",
-    "count": 10,
-    "source": "en",
-    "domain": "all",
-    "result": [
-        {
-            "generic_model_en-fr": [
-                "C' est un test pour être sûr de ce que je fais .\n"
-            ]
-        },
-        {
-            "full_model_en-fr": [
-                "C' est un test pour être sûr de ce que je fais .\n"
-            ]
-        }
-    ]
-}
-```
-
-### language route
-Ask which translation models are available:
-```
-curl -X GET \
-  http://localhost:8888/languages \
-  -H 'Authorization: customized-token' \
-  -H 'Cache-Control: no-cache' \
-  -H 'Content-Type: application/json'
-```
-Which responds:
-```
-{
-    "language_pairs": [
-        "en-fr-generic",
-        "en-fr-full",
-        "fr-en-generic",
-    ],
-    "languages": {
-        "de": [
-            "Allemand",
-            "de"
-        ],
-        "pt": [
-            "Portugais",
-            "pt"
-        ],
-        "en": [
-            "Anglais",
-            "gb"
-        ],
-        "it": [
-            "Italien",
-            "it"
-        ],
-        "fr": [
-            "Français",
-            "fr"
-        ],
-        "es": [
-            "Espagnol",
-            "es"
-        ],
-        "cs": [
-            "Tchèque",
-            "cz"
-        ],
-        "nl": [
-            "Néerlandais",
-            "nl"
-        ]
-    }
-}
-```
