@@ -30,22 +30,14 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(LD_PRELOAD "libcurl.so.3")
 
 set(TF_DIR ${PROJECT_SOURCE_DIR}/../tensorflow/)
-include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/)
-link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib/ /usr/local/lib/)
+include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include )
+link_directories(${TF_DIR}/bazel-bin/tensorflow )
 
 set(CMAKE_CXX_FLAGS "-O2 -std=c++11 -lpthread -fpermissive ")
 
 
-set(API_EXECUTABLE api_classification)
-set(API_SOURCE ${PROJECT_SOURCE_DIR}/src/api_classification.cpp ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp)
-set(NLU_EXECUTABLE nlu_local)
-set(NLU_SOURCE ${PROJECT_SOURCE_DIR}/src/local_nlu.cpp ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp ${PROJECT_SOURCE_DIR}/src/qnlu.cpp)
-set(NLU_EXECUTABLE_API api_nlu_local)
-set(NLU_SOURCE_API ${PROJECT_SOURCE_DIR}/src/api_local_nlu.cpp ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp ${PROJECT_SOURCE_DIR}/src/qnlu.cpp)
-add_executable(${API_EXECUTABLE} ${API_SOURCE})
-add_executable(${NLU_EXECUTABLE} ${NLU_SOURCE})
-add_executable(${NLU_EXECUTABLE_API} ${NLU_SOURCE_API})
-target_link_libraries(${API_EXECUTABLE} pistache pthread qnlp fasttext)
-target_link_libraries(${NLU_EXECUTABLE} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp)
-target_link_libraries(${NLU_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp cpr mongoose gtest gtest_main test_server curl)
+set(NMT_EXECUTABLE_API api_nlu_local)
+set(NMT_SOURCE_API ${PROJECT_SOURCE_DIR}/src/api_local_nmt.cpp ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp ${PROJECT_SOURCE_DIR}/src/qnmt.cpp)
+add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
+target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp)
 

@@ -76,15 +76,15 @@ tensorflow::Tensor AsTensor(const std::vector<T>& vals,
   return ret;
 }
 
-class qnlu
+class qnmt
 {
     public:
-        qnlu();
-        qnlu(const tensorflow::string&  filename);
+        qnmt();
+        qnmt(const tensorflow::string&  filename);
         void PrintBatch(const std::vector<std::vector<tensorflow::string> >& batch_tokens);
         std::vector<tensorflow::int32> PadBatch(std::vector<std::vector<tensorflow::string> >& batch_tokens);
         bool LoadModel(const tensorflow::string& export_dir);
-        bool NLUBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
     private:
       tensorflow::SavedModelBundle bundle;
   

@@ -22,22 +22,22 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 ***************************************************************************/
-#include "qnlu.h"
+#include "qnmt.h"
 
 using namespace std;
 
-qnlu::qnlu(const tensorflow::string& export_dir)
+qnmt::qnmt(const tensorflow::string& export_dir)
 {
     LoadModel(export_dir);
 }
-qnlu::qnlu()
+qnmt::qnmt()
 {
-    cerr << "Warning: NLU object is empty" <<endl;
+    cerr << "Warning: NMT object is empty" <<endl;
 }
 
 
 // Displays a batch of tokens.
-void qnlu::PrintBatch(
+void qnmt::PrintBatch(
     const std::vector<std::vector<tensorflow::string> >& batch_tokens) {
   for (const auto& tokens : batch_tokens) {
     for (const auto& token : tokens) {
@@ -48,7 +48,7 @@ void qnlu::PrintBatch(
 }
 
 // Pads a batch of tokens and returns the length of each sequence.
-std::vector<tensorflow::int32> qnlu::PadBatch(
+std::vector<tensorflow::int32> qnmt::PadBatch(
     std::vector<std::vector<tensorflow::string> >& batch_tokens) {
   std::vector<tensorflow::int32> lengths;
   size_t max_length = 0;
@@ -68,12 +68,12 @@ std::vector<tensorflow::int32> qnlu::PadBatch(
 
 
 // Loads a saved model.
-bool qnlu::LoadModel(const tensorflow::string& export_dir) {
+bool qnmt::LoadModel(const tensorflow::string& export_dir) {
   tensorflow::SessionOptions session_options;
   tensorflow::RunOptions run_options;
 
   tensorflow::Status load_saved_model_status =
-      LoadSavedModel(session_options, run_options, export_dir,
+      tensorflow::LoadSavedModel(session_options, run_options, export_dir,
                      {tensorflow::kSavedModelTagServe}, &bundle);
 
   if (!load_saved_model_status.ok()) {
@@ -85,7 +85,7 @@ bool qnlu::LoadModel(const tensorflow::string& export_dir) {
 }
 
 // Tanslates a batch of tokenizes sentences.
-bool qnlu::NLUBatch(
+bool qnmt::NMTBatch(
     std::vector<std::vector<tensorflow::string> > batch_tokens,
     std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
   // Pad batch.
@@ -104,81 +104,81 @@ bool qnlu::NLUBatch(
   
   int length = 0;
   int max_length_word = 0;
-  for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
-  {
-      l_tokens_in_batch = batch_tokens.at(l_inc_batch);
-      length = l_tokens_in_batch.size();
-      for (l_inc = 0 ; l_inc < length; l_inc++)
-      {
-          string word = l_tokens_in_batch.at(l_inc);
-          if (max_length_word < (int)word.size())
-          {
-              max_length_word = (int)word.size();
-          }
-      }
-  }
-  for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
-  {
-      l_tokens_in_batch = batch_tokens.at(l_inc_batch);
-      length = l_tokens_in_batch.size();
-      std::vector<std::vector<tensorflow::string> > chars_list_bis;
-      for (l_inc = 0 ; l_inc < length; l_inc++)
-      {
-          vector<tensorflow::string> l_char;
-          tensorflow::string word = l_tokens_in_batch.at(l_inc);
-          for (l_inc_char = 0 ; l_inc_char < max_length_word; l_inc_char++)
-          {
-              if (l_inc_char < (int)word.size())
-              {
-                  stringstream l_ss;
-                  l_ss << word[l_inc_char];
-                  l_char.push_back(l_ss.str());
-              }
-              else
-              {
-                  l_char.push_back("");
-              }
-          }
-          chars_list.push_back(l_char);
-      }
- 
-
-    l_inc=0;  
-    while (l_inc < max_length_word)
-    {
-        std::vector<tensorflow::string> l_vectmp;
-        chars_list_bis.push_back(l_vectmp);
-        int l_inc_bis=0;
-        while (l_inc_bis < length)
-        {
-            chars_list_bis[l_inc].push_back(chars_list[l_inc_bis][l_inc]);
-            l_inc_bis=l_inc_bis+1;
-        }
-        l_inc=l_inc+1;
-    }
-    chars_list_bis_batch.push_back(chars_list_bis);
-  }
+//   for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
+//   {
+//       l_tokens_in_batch = batch_tokens.at(l_inc_batch);
+//       length = l_tokens_in_batch.size();
+//       for (l_inc = 0 ; l_inc < length; l_inc++)
+//       {
+//           string word = l_tokens_in_batch.at(l_inc);
+//           if (max_length_word < (int)word.size())
+//           {
+//               max_length_word = (int)word.size();
+//           }
+//       }
+//   }
+//   for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
+//   {
+//       l_tokens_in_batch = batch_tokens.at(l_inc_batch);
+//       length = l_tokens_in_batch.size();
+//       std::vector<std::vector<tensorflow::string> > chars_list_bis;
+//       for (l_inc = 0 ; l_inc < length; l_inc++)
+//       {
+//           vector<tensorflow::string> l_char;
+//           tensorflow::string word = l_tokens_in_batch.at(l_inc);
+//           for (l_inc_char = 0 ; l_inc_char < max_length_word; l_inc_char++)
+//           {
+//               if (l_inc_char < (int)word.size())
+//               {
+//                   stringstream l_ss;
+//                   l_ss << word[l_inc_char];
+//                   l_char.push_back(l_ss.str());
+//               }
+//               else
+//               {
+//                   l_char.push_back("");
+//               }
+//           }
+//           chars_list.push_back(l_char);
+//       }
+//  
+// 
+//     l_inc=0;  
+//     while (l_inc < max_length_word)
+//     {
+//         std::vector<tensorflow::string> l_vectmp;
+//         chars_list_bis.push_back(l_vectmp);
+//         int l_inc_bis=0;
+//         while (l_inc_bis < length)
+//         {
+//             chars_list_bis[l_inc].push_back(chars_list[l_inc_bis][l_inc]);
+//             l_inc_bis=l_inc_bis+1;
+//         }
+//         l_inc=l_inc+1;
+//     }
+//     chars_list_bis_batch.push_back(chars_list_bis);
+//   }
 
   // Convert to tensors.
   std::vector<tensorflow::string> flat_batch_tokens = FlattenVector(batch_tokens);
-  std::vector<tensorflow::string> flat_batch_char = FlattenVector(chars_list_bis_batch);
+//   std::vector<tensorflow::string> flat_batch_char = FlattenVector(chars_list_bis_batch);
   tensorflow::Tensor tokens_tensor  =  AsTensor(flat_batch_tokens, {batch_size, max_length});
-  tensorflow::Tensor chars_tensor   = AsTensor(flat_batch_char, {batch_size, max_length, max_length_word});
+//   tensorflow::Tensor chars_tensor   = AsTensor(flat_batch_char, {batch_size, max_length, max_length_word});
   tensorflow::Tensor lengths_tensor = AsTensor(lengths);
 
   // Resolve name of inputs to fed and outputs to fetch.
   const auto signature_def_map = bundle.meta_graph_def.signature_def();
   const auto signature_def = signature_def_map.at(tensorflow::kDefaultServingSignatureDefKey);
   const tensorflow::string tokens_input_name  = signature_def.inputs().at("tokens").name();
-  const tensorflow::string char_input_name    = signature_def.inputs().at("chars").name();
+//   const tensorflow::string char_input_name    = signature_def.inputs().at("chars").name();
   const tensorflow::string length_input_name  = signature_def.inputs().at("length").name();
-  const tensorflow::string tokens_output_name = signature_def.outputs().at("tags").name();
+  const tensorflow::string tokens_output_name = signature_def.outputs().at("tokens").name();
   const tensorflow::string length_output_name = signature_def.outputs().at("length").name();
 
   // Forward in the graph.
   std::vector<tensorflow::Tensor> outputs;
   tensorflow::Status run_status = bundle.session->Run(
-      {{tokens_input_name, tokens_tensor}, {char_input_name, chars_tensor}, {length_input_name, lengths_tensor}},
+      {{tokens_input_name, tokens_tensor}, {length_input_name, lengths_tensor}},
       {tokens_output_name, length_output_name}, {}, &outputs);
 
   if (!run_status.ok()) {
@@ -187,7 +187,7 @@ bool qnlu::NLUBatch(
   }
 
   // Convert TensorFlow tensors to Eigen tensors.
-  auto e_tags = outputs[0].tensor<tensorflow::string,2>();
+  auto e_tokens = outputs[0].tensor<tensorflow::string,2>();
   auto e_length = outputs[1].tensor<tensorflow::int32,1>();
 // 
   // Collect results in C++ vectors.
@@ -196,7 +196,7 @@ bool qnlu::NLUBatch(
     std::vector<tensorflow::string> output_tokens;
     output_tokens.reserve(len);
     for (long i = 0; i < len ; ++i) {
-      output_tokens.push_back(e_tags(b, i));
+      output_tokens.push_back(e_tokens(b, i));
     }
     output_batch_tokens.push_back(output_tokens);
   }
@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
   std::cout << "Input:" << std::endl;
   PrintBatch(batch_tokens);
 
-  if (!NLUBatch(batch_tokens, output_batch_tokens)) {
+  if (!NMTBatch(batch_tokens, output_batch_tokens)) {
     return 1;
   }
 
