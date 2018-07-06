@@ -314,18 +314,17 @@ private:
             {
                 json j_tmp;
                 curr_token=result_batched.at(i).at(j);
-//                 cerr << curr_token << endl;
-                int sep_pos = (int)curr_token.find("@@");
-                if (sep_pos > -1)
-                {
-                    curr_token=curr_token.substr(0,sep_pos);
-                }
-                else
-                {
-                    if (translation_concat.length() > 0) translation_concat.append(" ");
-                }
-                translation_concat.append(result_batched.at(i).at(j));
+                cerr << "output: " << curr_token << endl;
+                if (translation_concat.length() > 0) translation_concat.append(" ");
+                translation_concat.append(curr_token);
             }
+        }
+        int sep_pos = (int)translation_concat.find("@@");
+        while (sep_pos > -1)
+        {
+            translation_concat=translation_concat.erase(sep_pos,3);
+            sep_pos = (int)translation_concat.find("@@");
+            
         }
         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
         
@@ -360,18 +359,16 @@ private:
             {
                 json j_tmp;
                 curr_token=result_batched.at(i).at(j);
-//                 cerr << curr_token << endl;
-                int sep_pos = (int)curr_token.find("@@");
-                if (sep_pos > -1)
-                {
-                    curr_token=curr_token.substr(0,sep_pos);
-                }
-                else
-                {
-                    if (translation_concat.length() > 0) translation_concat.append(" ");
-                }
-                translation_concat.append(result_batched.at(i).at(j));
+                cerr << "output: " << curr_token << endl;
+                if (translation_concat.length() > 0) translation_concat.append(" ");
+                translation_concat.append(curr_token);
             }
+        }
+        int sep_pos = (int)translation_concat.find("@@");
+        while (sep_pos > -1)
+        {
+            translation_concat=translation_concat.erase(sep_pos,3);
+            sep_pos = (int)translation_concat.find("@@");
         }
         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
         
