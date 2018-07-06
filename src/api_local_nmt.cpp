@@ -110,6 +110,13 @@ public:
     {
         return _model.NMTBatch(input,output);
     }
+    bool batch_NMT(string& input, vector<vector<string>>& output)
+    {
+        vector<string> to_process = _bpe->Encode(input);
+        vector<vector<string> > to_translate;
+        to_translate.push_back(to_process);
+        return _model.NMTBatch(to_translate,output);
+    }
     std::string getDomain()
     {
         return _domain;
@@ -275,6 +282,7 @@ private:
     bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
+        
 //         cerr << "Ze Size " << _list_nmt.size() << endl;
         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
@@ -286,6 +294,7 @@ private:
         if (it_nmt != _list_nmt.end())
         {
 //             cerr << "Translation" << endl;
+          
             (*it_nmt)->batch_NMT(input,result_batched);
         }
         string  translation_concat("");
@@ -316,6 +325,51 @@ private:
         
     }
     
+    bool askNMT(string &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
+    {
+        vector<vector<string> > result_batched ;
+        
+//         cerr << "Ze Size " << _list_nmt.size() << endl;
+        auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
+        {
+//             cerr << l_nmt->_domain <<"\t"<< domain << endl;
+//             cerr << l_nmt->_src <<"\t"<< src << endl;
+//             cerr << l_nmt->_tgt <<"\t"<< tgt << endl;
+            return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
+        }); 
+        if (it_nmt != _list_nmt.end())
+        {
+//             cerr << "Translation" << endl;
+          
+            (*it_nmt)->batch_NMT(input,result_batched);
+        }
+        string  translation_concat("");
+        string  curr_token("");
+        string  word_concat("");
+//         cerr << result_batched.size() << endl;                
+        for (int i=0;i<(int)result_batched.size();i++)
+        {
+//             cerr << result_batched.at(i).size() << endl;                
+            for (int j=0;j<(int)result_batched.at(i).size();j++)
+            {
+                json j_tmp;
+                curr_token=result_batched.at(i).at(j);
+//                 cerr << curr_token << endl;
+                int sep_pos = (int)curr_token.find("@@");
+                if (sep_pos > -1)
+                {
+                    curr_token=curr_token.substr(0,sep_pos);
+                }
+                else
+                {
+                    if (translation_concat.length() > 0) translation_concat.append(" ");
+                }
+                translation_concat.append(result_batched.at(i).at(j));
+            }
+        }
+        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
+        
+    }
     void doNMTGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.send(Pistache::Http::Code::Ok, "{\"message\":\"success\"}");
@@ -387,7 +441,7 @@ private:
 //                     j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
 //                 }
 //                 cerr << "Before asking" << endl;
-                askNMT(tokenized_batched,j,domain,src,tgt,debugmode);
+                askNMT(tokenized,j,domain,src,tgt,debugmode);
 //                 cerr << "After asking" << endl;
             }
         }
