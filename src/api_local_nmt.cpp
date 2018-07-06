@@ -35,6 +35,8 @@
 #include <sstream>
 #include "qtokenizer.h"
 #include "qnmt.h"
+#include "utils.h"
+#include "bpe.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -91,10 +93,17 @@ private:
 
 class NMT {
 public:
-    NMT(std::string dirname, string domain)
+    std::string _domain;
+    std::string _src;
+    std::string _tgt;
+
+    NMT(std::string dirname, string domain, string src, string tgt, string bpe)
     {
         _model.LoadModel(dirname);
         _domain = domain;
+        _bpe = new BPE(bpe);
+        _src=src;
+        _src=tgt;
     }
     
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
@@ -108,8 +117,8 @@ public:
 
 
 private:
-    std::string _domain;
-    qnlu _model;
+    qnmt _model;
+    BPE* _bpe;
 };
 
 
@@ -134,10 +143,16 @@ public:
 //         Classifier * l_classif;
         while (getline(model_config,line))
         {
-            string domain=line.substr(0,line.find("\t"));
-            string file=line.substr(line.find("\t")+1);
+            vector<string> vec_line;
+            Split(line,vec_line,"\t");
+            string src=vec_line.at(0);
+            string tgt=vec_line.at(1);
+            string bpe=vec_line.at(2);
+            string file=vec_line.at(3);
+            string domain=vec_line.at(4);
+            cerr << src <<"\t"<< tgt<< "\t" << bpe<< endl;
             cerr << domain <<"\t"<< file << endl;
-            _list_nlu.push_back(new NMT(file,domain));
+            _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe));
         }
         model_config.close();
         
@@ -167,14 +182,7 @@ public:
 
 private:
     vector<Classifier*> _list_classifs;
-    vector<NMT*> _list_nlu;
-    FastText clang;
-    FastText cIoT;
-    FastText cint;
-    FastText cshop;
-    qnlu nlu_IOT;
-    qnlu nlu_MEDIA;
-    cpr::Response *r;
+    vector<NMT*> _list_nmt;
     
     void setupRoutes() {
         using namespace Rest;
@@ -196,7 +204,18 @@ private:
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-        response.send(Pistache::Http::Code::Ok, "{\"language_pairs\":[\"en-fr-generic\",\"fr-en-generic\"]}");
+        string response_str("");
+        for (int i=0; i<(int) _list_nmt.size(); i++)
+        {
+            if ((int)response_str.length() != 0) response_str.append(",");
+            response_str.append(_list_nmt.at(i)->_src);
+            response_str.append("-");
+            response_str.append(_list_nmt.at(i)->_tgt);
+            response_str.append("-");
+            response_str.append(_list_nmt.at(i)->_domain);
+        }
+        response_str="{\""+response_str+"\"]}";
+        response.send(Pistache::Http::Code::Ok, response_str);
     }
 //     void doClassificationPost(const Rest::Request& request, Http::ResponseWriter response) 
 //     {
@@ -252,16 +271,16 @@ private:
         }
         return to_return;
     }
-    bool askNMT(vector<vector<string> > &input, json &output, string &domain, bool debugmode)
+    bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
-        auto it_nlu = std::find_if(_list_nlu.begin(), _list_nlu.end(), [&](NMT* l_nlu) 
+        auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
-            return l_nlu->getDomain() == domain;
+            return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
         }); 
-        if (it_nlu != _list_nlu.end())
+        if (it_nmt != _list_nmt.end())
         {
-            (*it_nlu)->batch_NMT(input,result_batched);
+            (*it_nmt)->batch_NMT(input,result_batched);
         }
         string  translation_concat("");
         string  curr_token("");
@@ -299,6 +318,23 @@ private:
         nlohmann::json j = nlohmann::json::parse(request.body());
         int count=10;
         bool debugmode = false;
+        
+        if (j.find("src") != j.end())
+        {
+            response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter src is needed\"}");
+        }
+
+        if (j.find("tgt") != j.end())
+        {
+            response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter tgt is needed\"}");
+        }
+        if (j.find("domain") != j.end())
+        {
+            response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter domain is needed\"}");
+        }
         if (j.find("count") != j.end())
         {
             count=j["count"]; 
@@ -310,8 +346,9 @@ private:
         if (j.find("text") != j.end())
         {
             string text=j["text"]; 
-            string lang=j["language"]; 
-            qtokenizer l_tok(lang,false);
+            string src=j["src"]; 
+            string tgt=j["tgt"]; 
+            qtokenizer l_tok(src,false);
             
             
             j.push_back( nlohmann::json::object_t::value_type(string("tokenized"), l_tok.tokenize_str(text) ));
@@ -333,16 +370,21 @@ private:
             {
                 string domain=j["domain"]; 
                 string tokenized=j["tokenized"]; 
-                istringstream istr(tokenized);
+//                 istringstream istr(tokenized);
 
-                if (domain.find("iot")==0)
-                {
-                    
-                    std::vector < std::pair < fasttext::real, std::string > > results = askClassification(tokenized,domain,count);
-                    j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
-                }
-                askNMT(tokenized_batched,j,domain,debugmode);
+//                 if (domain.find("iot")==0)
+//                 {
+//                     
+//                     std::vector < std::pair < fasttext::real, std::string > > results = askClassification(tokenized,domain,count);
+//                     j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
+//                 }
+                askNMT(tokenized_batched,j,domain,src,tgt,debugmode);
             }
+        }
+        else
+        {
+            response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter text is needed\"}");
         }
         std::string s=j.dump();
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
@@ -363,8 +405,6 @@ private:
 
     typedef std::mutex Lock;
     typedef std::lock_guard<Lock> Guard;
-    Lock nluLock;
-//     std::vector<Classifier> nluDomains;
     
 
     std::shared_ptr<Http::Endpoint> httpEndpoint;
@@ -376,7 +416,7 @@ int main(int argc, char *argv[]) {
 
     int thr = 8;
     string model_config_classif("model_classif_config.txt");
-    string model_config_NMT("model_nlu_config.txt");
+    string model_config_NMT("model_nmt_config.txt");
     if (argc >= 2) 
     {
         port = std::stol(argv[1]);

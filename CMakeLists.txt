@@ -36,8 +36,14 @@ link_directories(${TF_DIR}/bazel-bin/tensorflow )
 set(CMAKE_CXX_FLAGS "-O2 -std=c++11 -lpthread -fpermissive ")
 
 
-set(NMT_EXECUTABLE_API api_nlu_local)
-set(NMT_SOURCE_API ${PROJECT_SOURCE_DIR}/src/api_local_nmt.cpp ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp ${PROJECT_SOURCE_DIR}/src/qnmt.cpp)
+set(NMT_EXECUTABLE_API api_nmt_local)
+set(NMT_SOURCE_API 
+  ${PROJECT_SOURCE_DIR}/src/api_local_nmt.cpp 
+  ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp 
+  ${PROJECT_SOURCE_DIR}/src/qnmt.cpp 
+  ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
+  ${PROJECT_SOURCE_DIR}/src/utils.cpp
+  )
 add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
 target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp)
 
