@@ -94,92 +94,23 @@ bool qnmt::NMTBatch(
   tensorflow::int64 batch_size = batch_tokens.size();
   tensorflow::int64 max_length = batch_tokens.front().size();
   
-  std::vector<std::vector<std::vector<tensorflow::string> > > chars_list_bis_batch;
-  std::vector<std::vector<tensorflow::string> > chars_list;
-  std::vector<tensorflow::string> l_tokens_in_batch ;
-  
-  int l_inc=0;
-  int l_inc_batch=0;
-  int l_inc_char=0;
-  
-  int length = 0;
-  int max_length_word = 0;
-//   for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
-//   {
-//       l_tokens_in_batch = batch_tokens.at(l_inc_batch);
-//       length = l_tokens_in_batch.size();
-//       for (l_inc = 0 ; l_inc < length; l_inc++)
-//       {
-//           string word = l_tokens_in_batch.at(l_inc);
-//           if (max_length_word < (int)word.size())
-//           {
-//               max_length_word = (int)word.size();
-//           }
-//       }
-//   }
-//   for (l_inc_batch = 0; l_inc_batch < batch_size; l_inc_batch++)
-//   {
-//       l_tokens_in_batch = batch_tokens.at(l_inc_batch);
-//       length = l_tokens_in_batch.size();
-//       std::vector<std::vector<tensorflow::string> > chars_list_bis;
-//       for (l_inc = 0 ; l_inc < length; l_inc++)
-//       {
-//           vector<tensorflow::string> l_char;
-//           tensorflow::string word = l_tokens_in_batch.at(l_inc);
-//           for (l_inc_char = 0 ; l_inc_char < max_length_word; l_inc_char++)
-//           {
-//               if (l_inc_char < (int)word.size())
-//               {
-//                   stringstream l_ss;
-//                   l_ss << word[l_inc_char];
-//                   l_char.push_back(l_ss.str());
-//               }
-//               else
-//               {
-//                   l_char.push_back("");
-//               }
-//           }
-//           chars_list.push_back(l_char);
-//       }
-//  
-// 
-//     l_inc=0;  
-//     while (l_inc < max_length_word)
-//     {
-//         std::vector<tensorflow::string> l_vectmp;
-//         chars_list_bis.push_back(l_vectmp);
-//         int l_inc_bis=0;
-//         while (l_inc_bis < length)
-//         {
-//             chars_list_bis[l_inc].push_back(chars_list[l_inc_bis][l_inc]);
-//             l_inc_bis=l_inc_bis+1;
-//         }
-//         l_inc=l_inc+1;
-//     }
-//     chars_list_bis_batch.push_back(chars_list_bis);
-//   }
-
-  // Convert to tensors.
-  std::vector<tensorflow::string> flat_batch_tokens = FlattenVector(batch_tokens);
-//   std::vector<tensorflow::string> flat_batch_char = FlattenVector(chars_list_bis_batch);
-  tensorflow::Tensor tokens_tensor  =  AsTensor(flat_batch_tokens, {batch_size, max_length});
-//   tensorflow::Tensor chars_tensor   = AsTensor(flat_batch_char, {batch_size, max_length, max_length_word});
-  tensorflow::Tensor lengths_tensor = AsTensor(lengths);
+  std::vector<tensorflow::string> flat_batch_tokens =
+      FlattenVector(batch_tokens);
+  tensorflow::Tensor tokens_tensor =
+      AsTensor(flat_batch_tokens, {batch_size, max_length});
+tensorflow::Tensor lengths_tensor = AsTensor(lengths);
 
   // Resolve name of inputs to fed and outputs to fetch.
   const auto signature_def_map = bundle.meta_graph_def.signature_def();
   const auto signature_def = signature_def_map.at(tensorflow::kDefaultServingSignatureDefKey);
-  const tensorflow::string tokens_input_name  = signature_def.inputs().at("tokens").name();
-//   const tensorflow::string char_input_name    = signature_def.inputs().at("chars").name();
-  const tensorflow::string length_input_name  = signature_def.inputs().at("length").name();
+  const tensorflow::string tokens_input_name = signature_def.inputs().at("tokens").name();
+  const tensorflow::string length_input_name = signature_def.inputs().at("length").name();
   const tensorflow::string tokens_output_name = signature_def.outputs().at("tokens").name();
   const tensorflow::string length_output_name = signature_def.outputs().at("length").name();
 
   // Forward in the graph.
   std::vector<tensorflow::Tensor> outputs;
-  tensorflow::Status run_status = bundle.session->Run(
-      {{tokens_input_name, tokens_tensor}, {length_input_name, lengths_tensor}},
-      {tokens_output_name, length_output_name}, {}, &outputs);
+  tensorflow::Status run_status = bundle.session->Run({{tokens_input_name, tokens_tensor}, {length_input_name, lengths_tensor}}, {tokens_output_name, length_output_name}, {}, &outputs);
 
   if (!run_status.ok()) {
     std::cerr << "Running model failed: " << run_status << std::endl;
@@ -187,18 +118,19 @@ bool qnmt::NMTBatch(
   }
 
   // Convert TensorFlow tensors to Eigen tensors.
-  auto e_tokens = outputs[0].tensor<tensorflow::string,2>();
-  auto e_length = outputs[1].tensor<tensorflow::int32,1>();
-// 
+  auto e_tokens = outputs[0].tensor<tensorflow::string,3>();
+  auto e_length = outputs[1].matrix<tensorflow::int32>();
   // Collect results in C++ vectors.
-  for (long b = 0; b < batch_size; ++b) {
-    long len = e_length(b);
-    std::vector<tensorflow::string> output_tokens;
-    output_tokens.reserve(len);
-    for (long i = 0; i < len ; ++i) {
-      output_tokens.push_back(e_tokens(b, i));
-    }
-    output_batch_tokens.push_back(output_tokens);
+  for (long b = 0; b < batch_size; ++b) 
+  {
+      long len = e_length(b, 0);
+      std::vector<tensorflow::string> output_tokens;
+      output_tokens.reserve(len);
+      for (long i = 0; i < len - 1; ++i) 
+      {
+          output_tokens.push_back(e_tokens(b, 0, i));
+      }
+      output_batch_tokens.push_back(output_tokens);
   }
 
   return true;

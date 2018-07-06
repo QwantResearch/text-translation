@@ -103,7 +103,7 @@ public:
         _domain = domain;
         _bpe = new BPE(bpe);
         _src=src;
-        _src=tgt;
+        _tgt=tgt;
     }
     
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
@@ -124,34 +124,35 @@ private:
 
 class StatsEndpoint {
 public:
-    StatsEndpoint(Address addr, string classif_config, string NMT_config)
+    StatsEndpoint(Address addr, string NMT_config)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     { 
         ifstream model_config;
         string line;
-        model_config.open(classif_config);
-//         Classifier * l_classif;
-        while (getline(model_config,line))
-        {
-            string domain=line.substr(0,line.find("\t"));
-            string file=line.substr(line.find("\t")+1);
-            cerr << domain <<"\t"<< file << endl;
-            _list_classifs.push_back(new Classifier(file,domain));
-        }
-        model_config.close();
+//         model_config.open(classif_config);
+// //         Classifier * l_classif;
+//         while (getline(model_config,line))
+//         {
+//             string domain=line.substr(0,line.find("\t"));
+//             string file=line.substr(line.find("\t")+1);
+//             cerr << domain <<"\t"<< file << endl;
+//             _list_classifs.push_back(new Classifier(file,domain));
+//         }
+//         model_config.close();
         model_config.open(NMT_config);
 //         Classifier * l_classif;
         while (getline(model_config,line))
         {
             vector<string> vec_line;
             Split(line,vec_line,"\t");
+//             cerr << vec_line.size() << endl;
             string src=vec_line.at(0);
             string tgt=vec_line.at(1);
             string bpe=vec_line.at(2);
             string file=vec_line.at(3);
             string domain=vec_line.at(4);
-            cerr << src <<"\t"<< tgt<< "\t" << bpe<< endl;
-            cerr << domain <<"\t"<< file << endl;
+//             cerr << src <<"\t"<< tgt<< "\t" << bpe<< endl;
+//             cerr << domain <<"\t"<< file << endl;
             _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe));
         }
         model_config.close();
@@ -274,24 +275,31 @@ private:
     bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
+//         cerr << "Ze Size " << _list_nmt.size() << endl;
         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
+//             cerr << l_nmt->_domain <<"\t"<< domain << endl;
+//             cerr << l_nmt->_src <<"\t"<< src << endl;
+//             cerr << l_nmt->_tgt <<"\t"<< tgt << endl;
             return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
         }); 
         if (it_nmt != _list_nmt.end())
         {
+//             cerr << "Translation" << endl;
             (*it_nmt)->batch_NMT(input,result_batched);
         }
         string  translation_concat("");
         string  curr_token("");
         string  word_concat("");
-        for (int i=0;i<(int)input.size();i++)
+//         cerr << result_batched.size() << endl;                
+        for (int i=0;i<(int)result_batched.size();i++)
         {
-            for (int j=0;j<(int)input.at(i).size();j++)
+//             cerr << result_batched.at(i).size() << endl;                
+            for (int j=0;j<(int)result_batched.at(i).size();j++)
             {
-                
                 json j_tmp;
                 curr_token=result_batched.at(i).at(j);
+//                 cerr << curr_token << endl;
                 int sep_pos = (int)curr_token.find("@@");
                 if (sep_pos > -1)
                 {
@@ -319,18 +327,18 @@ private:
         int count=10;
         bool debugmode = false;
         
-        if (j.find("src") != j.end())
+        if (j.find("src") == j.end())
         {
             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
             response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter src is needed\"}");
         }
 
-        if (j.find("tgt") != j.end())
+        if (j.find("tgt") == j.end())
         {
             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
             response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter tgt is needed\"}");
         }
-        if (j.find("domain") != j.end())
+        if (j.find("domain") == j.end())
         {
             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
             response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter domain is needed\"}");
@@ -364,8 +372,8 @@ private:
                     line_tokenized.clear();
                 }
             }
+//             cerr << tokenized_batched.size() << endl;
             if (debugmode) j.push_back( nlohmann::json::object_t::value_type(string("tokenized_vec"), tokenized_batched ));
-            
             if (j.find("domain") != j.end())
             {
                 string domain=j["domain"]; 
@@ -378,7 +386,9 @@ private:
 //                     std::vector < std::pair < fasttext::real, std::string > > results = askClassification(tokenized,domain,count);
 //                     j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
 //                 }
+//                 cerr << "Before asking" << endl;
                 askNMT(tokenized_batched,j,domain,src,tgt,debugmode);
+//                 cerr << "After asking" << endl;
             }
         }
         else
@@ -415,7 +425,7 @@ int main(int argc, char *argv[]) {
     Port port(9009);
 
     int thr = 8;
-    string model_config_classif("model_classif_config.txt");
+//     string model_config_classif("model_classif_config.txt");
     string model_config_NMT("model_nmt_config.txt");
     if (argc >= 2) 
     {
@@ -425,11 +435,11 @@ int main(int argc, char *argv[]) {
             thr = std::stol(argv[2]);
             if (argc >= 4)
             {
-                model_config_classif = string(argv[3]);
-                if (argc >= 5)
-                {
-                    model_config_NMT = string(argv[4]);
-                }
+//                 model_config_classif = string(argv[3]);
+//                 if (argc >= 5)
+//                 {
+                    model_config_NMT = string(argv[3]);
+//                 }
             }
         }
     }
@@ -440,7 +450,7 @@ int main(int argc, char *argv[]) {
     cout << "Using " << thr << " threads" << endl;
     
 
-    StatsEndpoint stats(addr,model_config_classif,model_config_NMT);
+    StatsEndpoint stats(addr,model_config_NMT);
 
     stats.init(thr);
     stats.start();
