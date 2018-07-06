@@ -113,7 +113,13 @@ public:
     bool batch_NMT(string& input, vector<vector<string>>& output)
     {
         vector<string> to_process = _bpe->Encode(input);
+	cerr << input << endl;
+	for (int i=0; (int)i<(int)to_process.size() ; i++)
+	{
+		cerr << to_process.at(i)<<endl;
+	}
         vector<vector<string> > to_translate;
+
         to_translate.push_back(to_process);
         return _model.NMTBatch(to_translate,output);
     }
