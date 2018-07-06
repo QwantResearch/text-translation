@@ -112,7 +112,7 @@ public:
     }
     bool batch_NMT(string& input, vector<vector<string>>& output)
     {
-        vector<string> to_process = _bpe->Encode(input);
+        vector<string> to_process = _bpe->Segment(input);
 	cerr << input << endl;
 	for (int i=0; (int)i<(int)to_process.size() ; i++)
 	{
