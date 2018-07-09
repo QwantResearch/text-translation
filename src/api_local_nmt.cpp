@@ -142,30 +142,16 @@ public:
     { 
         ifstream model_config;
         string line;
-//         model_config.open(classif_config);
-// //         Classifier * l_classif;
-//         while (getline(model_config,line))
-//         {
-//             string domain=line.substr(0,line.find("\t"));
-//             string file=line.substr(line.find("\t")+1);
-//             cerr << domain <<"\t"<< file << endl;
-//             _list_classifs.push_back(new Classifier(file,domain));
-//         }
-//         model_config.close();
         model_config.open(NMT_config);
-//         Classifier * l_classif;
         while (getline(model_config,line))
         {
             vector<string> vec_line;
             Split(line,vec_line,"\t");
-//             cerr << vec_line.size() << endl;
             string src=vec_line.at(0);
             string tgt=vec_line.at(1);
             string bpe=vec_line.at(2);
             string file=vec_line.at(3);
             string domain=vec_line.at(4);
-//             cerr << src <<"\t"<< tgt<< "\t" << bpe<< endl;
-//             cerr << domain <<"\t"<< file << endl;
             _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe));
         }
         model_config.close();
@@ -205,16 +191,6 @@ private:
         Routes::Get(router, "/languages/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
 
     }
-//     void doClassificationGet(const Rest::Request& request, Http::ResponseWriter response) {
-//         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
-//         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-//         response.send(Pistache::Http::Code::Ok, "{\"message\":\"success\"}");
-//     }
-//     void doClassificationDomainsGet(const Rest::Request& request, Http::ResponseWriter response) {
-//         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
-//         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-//         response.send(Pistache::Http::Code::Ok, "{\"domains\":[\"language_identification\",\"shopping\",\"advertisement\",\"iot\",\"intention\"]}");
-//     }
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
@@ -231,45 +207,6 @@ private:
         response_str="{\""+response_str+"\"]}";
         response.send(Pistache::Http::Code::Ok, response_str);
     }
-//     void doClassificationPost(const Rest::Request& request, Http::ResponseWriter response) 
-//     {
-//         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
-//         nlohmann::json j = nlohmann::json::parse(request.body());
-//         int count=10;
-//         bool debugmode = false;
-//         if (j.find("count") != j.end())
-//         {
-//             count=j["count"]; 
-//         }
-//         if (j.find("debug") != j.end())
-//         {
-//             debugmode=j["debug"]; 
-//         }
-//         if (j.find("text") != j.end())
-//         {
-//             string text=j["text"]; 
-//             string lang=j["language"]; 
-//             qtokenizer l_tok(lang,false);
-//             
-//             
-//             j.push_back( nlohmann::json::object_t::value_type(string("tokenized"), l_tok.tokenize_str(text) ));
-//             if (j.find("domain") != j.end())
-//             {
-//                 string domain=j["domain"]; 
-//                 string tokenized=j["tokenized"]; 
-//                 istringstream istr(tokenized);
-//                 std::vector < std::pair < fasttext::real, std::string > > results;
-//                 results = askClassification(tokenized,domain,count);
-//                 j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
-//             }
-//             std::string s=j.dump();
-//             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-//             response.send(Http::Code::Ok, std::string(s));
-//         }
-//         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-// //         response.headers().add<Http::Header::ContentType>(MIME('Powered-By', 'Qwant Research'));
-//         response.send(Http::Code::Bad_Request, std::string("Missing things..."));
-//     }    
     
     std::vector < std::pair < fasttext::real, std::string > > askClassification(std::string text, std::string domain, int count)
     {
@@ -285,76 +222,64 @@ private:
         }
         return to_return;
     }
-    bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
-    {
-        vector<vector<string> > result_batched ;
-        
-//         cerr << "Ze Size " << _list_nmt.size() << endl;
-        auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
-        {
-//             cerr << l_nmt->_domain <<"\t"<< domain << endl;
-//             cerr << l_nmt->_src <<"\t"<< src << endl;
-//             cerr << l_nmt->_tgt <<"\t"<< tgt << endl;
-            return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
-        }); 
-        if (it_nmt != _list_nmt.end())
-        {
-//             cerr << "Translation" << endl;
-          
-            (*it_nmt)->batch_NMT(input,result_batched);
-        }
-        string  translation_concat("");
-        string  curr_token("");
-        string  word_concat("");
-//         cerr << result_batched.size() << endl;                
-        for (int i=0;i<(int)result_batched.size();i++)
-        {
-//             cerr << result_batched.at(i).size() << endl;                
-            for (int j=0;j<(int)result_batched.at(i).size();j++)
-            {
-                json j_tmp;
-                curr_token=result_batched.at(i).at(j);
-                cerr << "output: " << curr_token << endl;
-                if (translation_concat.length() > 0) translation_concat.append(" ");
-                translation_concat.append(curr_token);
-            }
-        }
-        int sep_pos = (int)translation_concat.find("@@");
-        while (sep_pos > -1)
-        {
-            translation_concat=translation_concat.erase(sep_pos,3);
-            sep_pos = (int)translation_concat.find("@@");
-            
-        }
-        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
-        
-    }
+//     bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
+//     {
+//         vector<vector<string> > result_batched ;
+//         
+//         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
+//         {
+//             return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
+//         }); 
+//         if (it_nmt != _list_nmt.end())
+//         {
+//             (*it_nmt)->batch_NMT(input,result_batched);
+//         }
+//         string  translation_concat("");
+//         string  curr_token("");
+//         string  word_concat("");
+//         for (int i=0;i<(int)result_batched.size();i++)
+//         {
+//             for (int j=0;j<(int)result_batched.at(i).size();j++)
+//             {
+//                 json j_tmp;
+//                 curr_token=result_batched.at(i).at(j);
+//                 cerr << "output: " << curr_token << endl;
+//                 if (translation_concat.length() > 0) translation_concat.append(" ");
+//                 translation_concat.append(curr_token);
+//             }
+//         }
+//         int sep_pos = (int)translation_concat.find("@@");
+//         while (sep_pos > -1)
+//         {
+//             translation_concat=translation_concat.erase(sep_pos,3);
+//             sep_pos = (int)translation_concat.find("@@");
+//             
+//         }
+//         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
+//         
+//     }
     
     bool askNMT(string &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
         
-//         cerr << "Ze Size " << _list_nmt.size() << endl;
         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
-//             cerr << l_nmt->_domain <<"\t"<< domain << endl;
-//             cerr << l_nmt->_src <<"\t"<< src << endl;
-//             cerr << l_nmt->_tgt <<"\t"<< tgt << endl;
             return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
         }); 
         if (it_nmt != _list_nmt.end())
         {
-//             cerr << "Translation" << endl;
-          
             (*it_nmt)->batch_NMT(input,result_batched);
+        }
+        else
+        {
+            return false;
         }
         string  translation_concat("");
         string  curr_token("");
         string  word_concat("");
-//         cerr << result_batched.size() << endl;                
         for (int i=0;i<(int)result_batched.size();i++)
         {
-//             cerr << result_batched.at(i).size() << endl;                
             for (int j=0;j<(int)result_batched.at(i).size();j++)
             {
                 json j_tmp;
@@ -371,7 +296,7 @@ private:
             sep_pos = (int)translation_concat.find("@@");
         }
         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
-        
+        return true;
     }
     void doNMTGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
@@ -435,17 +360,11 @@ private:
             {
                 string domain=j["domain"]; 
                 string tokenized=j["tokenized"]; 
-//                 istringstream istr(tokenized);
-
-//                 if (domain.find("iot")==0)
-//                 {
-//                     
-//                     std::vector < std::pair < fasttext::real, std::string > > results = askClassification(tokenized,domain,count);
-//                     j.push_back( nlohmann::json::object_t::value_type(string("intention"), results));
-//                 }
-//                 cerr << "Before asking" << endl;
-                askNMT(tokenized,j,domain,src,tgt,debugmode);
-//                 cerr << "After asking" << endl;
+                if (! askNMT(tokenized,j,domain,src,tgt,debugmode))
+                {
+                    response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+                    response.send(Http::Code::Bad_Request, "{\"Error\":\"combination src, tgt, domain not available!\"}");
+                }
             }
         }
         else
@@ -482,7 +401,7 @@ int main(int argc, char *argv[]) {
     Port port(9009);
 
     int thr = 8;
-//     string model_config_classif("model_classif_config.txt");
+
     string model_config_NMT("model_nmt_config.txt");
     if (argc >= 2) 
     {
@@ -492,11 +411,7 @@ int main(int argc, char *argv[]) {
             thr = std::stol(argv[2]);
             if (argc >= 4)
             {
-//                 model_config_classif = string(argv[3]);
-//                 if (argc >= 5)
-//                 {
-                    model_config_NMT = string(argv[3]);
-//                 }
+                model_config_NMT = string(argv[3]);
             }
         }
     }
