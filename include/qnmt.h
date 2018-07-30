@@ -27,9 +27,33 @@
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/signature_constants.h>
 #include <tensorflow/cc/saved_model/tag_constants.h>
+
+#include <tensorflow/cc/framework/scope.h>
+
+#include <tensorflow/cc/ops/parsing_ops.h>
 #include <tensorflow/core/lib/io/path.h>
 #include <tensorflow/core/platform/init_main.h>
 #include <tensorflow/core/util/command_line_flags.h>
+
+
+#include "grpcpp/create_channel.h"
+#include "grpcpp/security/credentials.h"
+#include "google/protobuf/map.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/platform/types.h"
+#include "tensorflow/core/util/command_line_flags.h"
+#include "tensorflow_serving/apis/prediction_service.grpc.pb.h"
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
+
+using tensorflow::serving::PredictRequest;
+using tensorflow::serving::PredictResponse;
+using tensorflow::serving::PredictionService;
+
+typedef google::protobuf::Map<tensorflow::string, tensorflow::TensorProto> OutMap;
+
 
 using namespace std;
 
@@ -84,8 +108,14 @@ class qnmt
         void PrintBatch(const std::vector<std::vector<tensorflow::string> >& batch_tokens);
         std::vector<tensorflow::int32> PadBatch(std::vector<std::vector<tensorflow::string> >& batch_tokens);
         bool LoadModel(const tensorflow::string& export_dir);
+        bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
         bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool NLUBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool getLocal();
     private:
-      tensorflow::SavedModelBundle bundle;
+      tensorflow::SavedModelBundle _bundle;
+      shared_ptr<PredictionService::Stub> _stub;
+      bool _local;
+      string _model_name;
   
 };
