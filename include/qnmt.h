@@ -23,6 +23,7 @@
 * SOFTWARE.
 ***************************************************************************/
 #include <iostream>
+#include <boost/locale.hpp>
 
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/signature_constants.h>

@@ -216,8 +216,8 @@ bool qnmt::NMTBatchOnline(
   
   if (status.ok()) 
   {
-//     std::cout << "call predict ok" << std::endl;
-//     std::cout << "outputs size is "<< response.outputs_size() << std::endl;
+    std::cout << "call predict ok" << std::endl;
+    std::cout << "outputs size is "<< response.outputs_size() << std::endl;
     OutMap& map_outputs =  *response.mutable_outputs();
     OutMap::iterator iter;
     int output_index = 0;
@@ -234,8 +234,7 @@ bool qnmt::NMTBatchOnline(
       if (converted) {
         if (iter->first.find("tokens") == 0) e_tokens.FromProto(result_tensor_proto);
         if (iter->first.find("length") == 0) e_length.FromProto(result_tensor_proto);
-//         std::cout << "the " <<iter->first <<" result tensor[" << output_index << "] is:" <<
-//               std::endl << tensor.SummarizeValue(250) << std::endl;
+        std::cout << "the " <<iter->first <<" result tensor[" << output_index << "] is:" << std::endl << tensor.SummarizeValue(250) << std::endl;
       }else {
         std::cerr << "the " <<iter->first <<" result tensor[" << output_index << 
               "] convert failed." << std::endl;
@@ -249,21 +248,27 @@ bool qnmt::NMTBatchOnline(
   long prev=0;
   vector<string> vec_length;
   vector<string> vec_tokens;
-  Split_str(e_length.SummarizeValue(250),vec_length, " ");
+  Split_str(e_length.SummarizeValue(250).substr(1).substr(0,e_length.SummarizeValue(250).size()-1),vec_length, " ");
   Split_str(e_tokens.SummarizeValue(250),vec_tokens, " ");
+  cerr << batch_size <<endl;
   for (long b = 0; b < batch_size; ++b) {
     long len = prev+atol(vec_length[b].c_str());
+	cerr << len << endl;
+	cerr << vec_length[b] << endl;
 //     prev=
     std::vector<tensorflow::string> output_tokens;
     output_tokens.reserve(len);
-    for (long i = prev; i < len ; ++i) {
-      output_tokens.push_back(vec_tokens[i]);
+    for (long i = prev; i < len ; ++i) 
+    {
+	cerr << vec_tokens[i] << endl;
+        cerr << boost::locale::conv::utf_to_utf<char>(vec_tokens[i].c_str())<< endl;
+        output_tokens.push_back(vec_tokens[i]);
     }
     prev=len;
     output_batch_tokens.push_back(output_tokens);
   }  
 
-
+	cerr << "Translation done... " << endl;
   return "Done.";
   } else {
     std::cout << "gRPC call return code: " 
