@@ -101,7 +101,7 @@ public:
     NMT(std::string dirname, string domain, string src, string tgt, string bpe, int local)
     {
         if (local == 1) _model.LoadModel(dirname);
-        else _model.LoadModel(src+"-"+tgt+"-"+domain, dirname);
+        else _model.LoadModel(string(src+"-"+tgt+"-"+domain), grpc::CreateChannel(dirname,grpc::InsecureChannelCredentials()));
         _domain = domain;
         _bpe = new BPE(bpe);
         _src=src;
@@ -111,7 +111,7 @@ public:
     
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
     {
-        if (_model._local == 1) return _model.NMTBatch(input,output);
+        if (_local == 1) return _model.NMTBatch(input,output);
         return _model.NMTBatchOnline(input,output);
     }
     bool batch_NMT(string& input, vector<vector<string>>& output)
@@ -125,7 +125,7 @@ public:
         vector<vector<string> > to_translate;
 
         to_translate.push_back(to_process);
-        if (_model._local == 1) return _model.NMTBatch(to_translate,output);
+        if (_local == 1) return _model.NMTBatch(to_translate,output);
         return _model.NMTBatchOnline(to_translate,output);
     }
     std::string getDomain()
