@@ -172,7 +172,7 @@ bool qnmt::NMTBatch(
 
 
 // Tanslates a batch of tokenizes sentences.
-bool qnmt::NLUBatchOnline(
+bool qnmt::NMTBatchOnline(
     std::vector<std::vector<tensorflow::string> > batch_tokens,
     std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
   // Pad batch.

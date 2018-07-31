@@ -96,19 +96,23 @@ public:
     std::string _domain;
     std::string _src;
     std::string _tgt;
+    int _local;
 
-    NMT(std::string dirname, string domain, string src, string tgt, string bpe)
+    NMT(std::string dirname, string domain, string src, string tgt, string bpe, int local)
     {
-        _model.LoadModel(dirname);
+        if (local == 1) _model.LoadModel(dirname);
+        else _model.LoadModel(src+"-"+tgt+"-"+domain, dirname);
         _domain = domain;
         _bpe = new BPE(bpe);
         _src=src;
         _tgt=tgt;
+        _local=local;
     }
     
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
     {
-        return _model.NMTBatch(input,output);
+        if (_model._local == 1) return _model.NMTBatch(input,output);
+        return _model.NMTBatchOnline(input,output);
     }
     bool batch_NMT(string& input, vector<vector<string>>& output)
     {
@@ -121,7 +125,8 @@ public:
         vector<vector<string> > to_translate;
 
         to_translate.push_back(to_process);
-        return _model.NMTBatch(to_translate,output);
+        if (_model._local == 1) return _model.NMTBatch(to_translate,output);
+        return _model.NMTBatchOnline(to_translate,output);
     }
     std::string getDomain()
     {
@@ -152,7 +157,8 @@ public:
             string bpe=vec_line.at(2);
             string file=vec_line.at(3);
             string domain=vec_line.at(4);
-            _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe));
+            int local=atoi(vec_line.at(5).c_str());
+            _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe,local));
         }
         model_config.close();
         

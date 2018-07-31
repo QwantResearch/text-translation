@@ -110,7 +110,7 @@ class qnmt
         bool LoadModel(const tensorflow::string& export_dir);
         bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
         bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
-        bool NLUBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool NMTBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
         bool getLocal();
     private:
       tensorflow::SavedModelBundle _bundle;
