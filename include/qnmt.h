@@ -24,6 +24,7 @@
 ***************************************************************************/
 #include <iostream>
 #include <boost/locale.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/signature_constants.h>

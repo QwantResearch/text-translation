@@ -46,6 +46,113 @@ void Split_str(const std::string& line, std::vector<std::string>& pieces, const 
     pieces.push_back(token);
 }
 
+
+void str_to_utf8(string& line)
+{
+    boost::replace_all(line, "\\'", "'");
+    int line_size=(int)line.size();
+    for (int i=0; i< line_size; i++)
+//     while ((int)line.find("\\") > -1)
+    {
+        boost::replace_all(line, "\\302\\241", "¡");
+        boost::replace_all(line, "\\302\\242", "¢");
+        boost::replace_all(line, "\\302\\243", "£");
+        boost::replace_all(line, "\\302\\244", "¤");
+        boost::replace_all(line, "\\302\\245", "¥");
+        boost::replace_all(line, "\\302\\246", "¦");
+        boost::replace_all(line, "\\302\\247", "§");
+        boost::replace_all(line, "\\302\\250", "¨");
+        boost::replace_all(line, "\\302\\251", "©");
+        boost::replace_all(line, "\\302\\252", "ª");
+        boost::replace_all(line, "\\302\\253", "«");
+        boost::replace_all(line, "\\302\\254", "¬");
+        boost::replace_all(line, "\\302\\255", "­");
+        boost::replace_all(line, "\\302\\256", "®");
+        boost::replace_all(line, "\\302\\257", "¯");
+        boost::replace_all(line, "\\302\\260", "°");
+        boost::replace_all(line, "\\302\\261", "±");
+        boost::replace_all(line, "\\302\\262", "²");
+        boost::replace_all(line, "\\302\\263", "³");
+        boost::replace_all(line, "\\302\\264", "´");
+        boost::replace_all(line, "\\302\\265", "µ");
+        boost::replace_all(line, "\\302\\266", "¶");
+        boost::replace_all(line, "\\302\\267", "·");
+        boost::replace_all(line, "\\302\\270", "¸");
+        boost::replace_all(line, "\\302\\271", "¹");
+        boost::replace_all(line, "\\302\\272", "º");
+        boost::replace_all(line, "\\302\\273", "»");
+        boost::replace_all(line, "\\302\\274", "¼");
+        boost::replace_all(line, "\\302\\275", "½");
+        boost::replace_all(line, "\\302\\276", "¾");
+        boost::replace_all(line, "\\302\\277", "¿");
+        boost::replace_all(line, "\\303\\200", "À");
+        boost::replace_all(line, "\\303\\201", "Á");
+        boost::replace_all(line, "\\303\\202", "Â");
+        boost::replace_all(line, "\\303\\203", "Ã");
+        boost::replace_all(line, "\\303\\204", "Ä");
+        boost::replace_all(line, "\\303\\205", "Å");
+        boost::replace_all(line, "\\303\\206", "Æ");
+        boost::replace_all(line, "\\303\\207", "Ç");
+        boost::replace_all(line, "\\303\\210", "È");
+        boost::replace_all(line, "\\303\\211", "É");
+        boost::replace_all(line, "\\303\\212", "Ê");
+        boost::replace_all(line, "\\303\\213", "Ë");
+        boost::replace_all(line, "\\303\\214", "Ì");
+        boost::replace_all(line, "\\303\\215", "Í");
+        boost::replace_all(line, "\\303\\216", "Î");
+        boost::replace_all(line, "\\303\\217", "Ï");
+        boost::replace_all(line, "\\303\\220", "Ð");
+        boost::replace_all(line, "\\303\\221", "Ñ");
+        boost::replace_all(line, "\\303\\222", "Ò");
+        boost::replace_all(line, "\\303\\223", "Ó");
+        boost::replace_all(line, "\\303\\224", "Ô");
+        boost::replace_all(line, "\\303\\225", "Õ");
+        boost::replace_all(line, "\\303\\226", "Ö");
+        boost::replace_all(line, "\\303\\227", "×");
+        boost::replace_all(line, "\\303\\230", "Ø");
+        boost::replace_all(line, "\\303\\231", "Ù");
+        boost::replace_all(line, "\\303\\232", "Ú");
+        boost::replace_all(line, "\\303\\233", "Û");
+        boost::replace_all(line, "\\303\\234", "Ü");
+        boost::replace_all(line, "\\303\\235", "Ý");
+        boost::replace_all(line, "\\303\\236", "Þ");
+        boost::replace_all(line, "\\303\\237", "ß");
+        boost::replace_all(line, "\\303\\240", "à");
+        boost::replace_all(line, "\\303\\241", "á");
+        boost::replace_all(line, "\\303\\242", "â");
+        boost::replace_all(line, "\\303\\243", "ã");
+        boost::replace_all(line, "\\303\\244", "ä");
+        boost::replace_all(line, "\\303\\245", "å");
+        boost::replace_all(line, "\\303\\246", "æ");
+        boost::replace_all(line, "\\303\\247", "ç");
+        boost::replace_all(line, "\\303\\250", "è");
+        boost::replace_all(line, "\\303\\251", "é");
+        boost::replace_all(line, "\\303\\252", "ê");
+        boost::replace_all(line, "\\303\\253", "ë");
+        boost::replace_all(line, "\\303\\254", "ì");
+        boost::replace_all(line, "\\303\\255", "í");
+        boost::replace_all(line, "\\303\\256", "î");
+        boost::replace_all(line, "\\303\\257", "ï");
+        boost::replace_all(line, "\\303\\260", "ð");
+        boost::replace_all(line, "\\303\\261", "ñ");
+        boost::replace_all(line, "\\303\\262", "ò");
+        boost::replace_all(line, "\\303\\263", "ó");
+        boost::replace_all(line, "\\303\\264", "ô");
+        boost::replace_all(line, "\\303\\265", "õ");
+        boost::replace_all(line, "\\303\\266", "ö");
+        boost::replace_all(line, "\\303\\267", "÷");
+        boost::replace_all(line, "\\303\\270", "ø");
+        boost::replace_all(line, "\\303\\271", "ù");
+        boost::replace_all(line, "\\303\\272", "ú");
+        boost::replace_all(line, "\\303\\273", "û");
+        boost::replace_all(line, "\\303\\274", "ü");
+        boost::replace_all(line, "\\303\\275", "ý");
+        boost::replace_all(line, "\\303\\276", "þ");
+        boost::replace_all(line, "\\303\\277", "ÿ");
+    }
+//     return line;
+}
+
 qnmt::qnmt(const tensorflow::string& export_dir)
 {
     LoadModel(export_dir);
@@ -216,8 +323,8 @@ bool qnmt::NMTBatchOnline(
   
   if (status.ok()) 
   {
-    std::cout << "call predict ok" << std::endl;
-    std::cout << "outputs size is "<< response.outputs_size() << std::endl;
+//     std::cout << "call predict ok" << std::endl;
+//     std::cout << "outputs size is "<< response.outputs_size() << std::endl;
     OutMap& map_outputs =  *response.mutable_outputs();
     OutMap::iterator iter;
     int output_index = 0;
@@ -234,7 +341,7 @@ bool qnmt::NMTBatchOnline(
       if (converted) {
         if (iter->first.find("tokens") == 0) e_tokens.FromProto(result_tensor_proto);
         if (iter->first.find("length") == 0) e_length.FromProto(result_tensor_proto);
-        std::cout << "the " <<iter->first <<" result tensor[" << output_index << "] is:" << std::endl << tensor.SummarizeValue(250) << std::endl;
+//         std::cout << "the " <<iter->first <<" result tensor[" << output_index << "] is:" << std::endl << tensor.SummarizeValue(250) << std::endl;
       }else {
         std::cerr << "the " <<iter->first <<" result tensor[" << output_index << 
               "] convert failed." << std::endl;
@@ -250,25 +357,26 @@ bool qnmt::NMTBatchOnline(
   vector<string> vec_tokens;
   Split_str(e_length.SummarizeValue(250).substr(1).substr(0,e_length.SummarizeValue(250).size()-1),vec_length, " ");
   Split_str(e_tokens.SummarizeValue(250),vec_tokens, " ");
-  cerr << batch_size <<endl;
+//   cerr << batch_size <<endl;
   for (long b = 0; b < batch_size; ++b) {
     long len = prev+atol(vec_length[b].c_str());
-	cerr << len << endl;
-	cerr << vec_length[b] << endl;
+// 	cerr << len << endl;
+// 	cerr << vec_length[b] << endl;
 //     prev=
     std::vector<tensorflow::string> output_tokens;
     output_tokens.reserve(len);
-    for (long i = prev; i < len ; ++i) 
+    for (long i = prev; i < len-1 ; ++i) 
     {
-	cerr << vec_tokens[i] << endl;
-        cerr << boost::locale::conv::utf_to_utf<char>(vec_tokens[i].c_str())<< endl;
+// 	cerr << vec_tokens[i] << endl;
+//         cerr << str_to_utf8(vec_tokens[i])<< endl;
+        str_to_utf8(vec_tokens[i]);
         output_tokens.push_back(vec_tokens[i]);
     }
     prev=len;
     output_batch_tokens.push_back(output_tokens);
   }  
 
-	cerr << "Translation done... " << endl;
+// 	cerr << "Translation done... " << endl;
   return "Done.";
   } else {
     std::cout << "gRPC call return code: " 

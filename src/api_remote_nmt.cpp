@@ -290,7 +290,7 @@ private:
             {
                 json j_tmp;
                 curr_token=result_batched.at(i).at(j);
-                cerr << "output: " << curr_token << endl;
+//                 cerr << "output: " << curr_token << endl;
                 if (translation_concat.length() > 0) translation_concat.append(" ");
                 translation_concat.append(curr_token);
             }
