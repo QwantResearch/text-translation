@@ -379,9 +379,7 @@ bool qnmt::NMTBatchOnline(
 // 	cerr << "Translation done... " << endl;
   return "Done.";
   } else {
-    std::cout << "gRPC call return code: " 
-        <<status.error_code() << ": " << status.error_message()
-        << std::endl;
+    std::cerr << "gRPC call return code: " <<status.error_code() << ": " << status.error_message() << std::endl;
     return "gRPC failed.";
   }
  

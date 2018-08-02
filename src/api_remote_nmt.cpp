@@ -100,13 +100,22 @@ public:
 
     NMT(std::string dirname, string domain, string src, string tgt, string bpe, int local)
     {
-        if (local == 1) _model.LoadModel(dirname);
+        cerr << "*************************************" <<endl;
+        cerr << "Model name: " << dirname <<endl;
+        cerr << "Model details: "<< string(src+"-"+tgt+"-"+domain)<<endl;
+        if (local == 1)
+        {
+                _model.LoadModel(dirname);
+                cerr << "Model is locally loaded" <<endl;
+        }
         else _model.LoadModel(string(src+"-"+tgt+"-"+domain), grpc::CreateChannel(dirname,grpc::InsecureChannelCredentials()));
+        cerr << "*************************************" <<endl;
         _domain = domain;
         _bpe = new BPE(bpe);
         _src=src;
         _tgt=tgt;
         _local=local;
+
     }
     
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
