@@ -324,16 +324,16 @@ private:
         int count=10;
         bool debugmode = false;
         
-        if (j.find("src") == j.end())
+        if (j.find("source") == j.end())
         {
             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter src is needed\"}");
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter source is needed\"}");
         }
 
-        if (j.find("tgt") == j.end())
+        if (j.find("target") == j.end())
         {
             response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter tgt is needed\"}");
+            response.send(Http::Code::Bad_Request, "{\"Error\":\"parameter target is needed\"}");
         }
         if (j.find("domain") == j.end())
         {
