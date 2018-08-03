@@ -12,6 +12,7 @@ Contact: christophe[dot]servan[at]qwantresearch[dot]com
 * install pistache (https://github.com/oktal/pistache.git)
 * install nlohmann json (https://github.com/nlohmann/json.git)
 * compile tensorflow from source (see next session)
+* compile tensorflow serving from source (https://www.tensorflow.org/serving/setup)
 
 ### Install Tensorflow
 
