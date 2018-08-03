@@ -74,8 +74,13 @@ bazel build --config=opt //tensorflow:libtensorflow_qnlp.so
 
 ## Launch the API
 
-
+Launch either the API, jointly with TF serving (api_nmt_remote) or locally loaded models (api_nmt_local)
 ```
-  ./api_nmt [#port] [#threads] [config filename]
+  ./api_nmt_remote [#port] [#threads] [config filename]
+``` 
+Or 
+``` 
+  ./api_nmt_local [#port] [#threads] [config filename]
+
 ``` 
 
