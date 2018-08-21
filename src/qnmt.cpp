@@ -199,7 +199,7 @@ bool qnmt::LoadModel(const tensorflow::string& export_dir)
 
 bool qnmt::LoadGraph(const std::string& graph_file) 
 {
-  tensorflow::Status load_graph_status = LoadGraph(graph_file, _session);
+  tensorflow::Status load_graph_status = LoadGraph(graph_file, &_session);
   if (!load_graph_status.ok()) 
   {
     std::cerr << load_graph_status << std::endl;
@@ -208,7 +208,22 @@ bool qnmt::LoadGraph(const std::string& graph_file)
   return true;
 }
 
-
+tensorflow::Status qnmt::LoadGraph(const string& graph_file_name, std::unique_ptr<tensorflow::Session>* session) 
+{
+  tensorflow::GraphDef graph_def;
+  tensorflow::Status load_graph_status = ReadBinaryProto(tensorflow::Env::Default(), graph_file_name, &graph_def);
+  if (!load_graph_status.ok()) 
+  {
+    return tensorflow::errors::NotFound("Failed to load compute graph at '", graph_file_name, "'");
+  }
+  session->reset(tensorflow::NewSession(tensorflow::SessionOptions()));
+  tensorflow::Status session_create_status = (*session)->Create(graph_def);
+  if (!session_create_status.ok()) 
+  {
+    return session_create_status;
+  }
+  return tensorflow::Status::OK();
+}
 // Displays a batch of tokens.
 void qnmt::PrintBatch(
     const std::vector<std::vector<tensorflow::string> >& batch_tokens) {

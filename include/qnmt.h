@@ -57,11 +57,11 @@ using tensorflow::serving::PredictRequest;
 using tensorflow::serving::PredictResponse;
 using tensorflow::serving::PredictionService;
 
-using tensorflow::Flag;
-using tensorflow::Tensor;
-using tensorflow::Status;
-using tensorflow::string;
-using tensorflow::int32;
+// using tensorflow::Flag;
+// using tensorflow::Tensor;
+// using tensorflow::Status;
+// using tensorflow::string;
+// using tensorflow::int32;
 
 typedef google::protobuf::Map<tensorflow::string, tensorflow::TensorProto> OutMap;
 
@@ -120,6 +120,7 @@ class qnmt
         std::vector<tensorflow::int32> PadBatch(std::vector<std::vector<tensorflow::string> >& batch_tokens);
         bool LoadModel(const tensorflow::string& export_dir);
         bool LoadGraph(const std::string& graph_file);
+        tensorflow::Status LoadGraph(const string& graph_file_name, std::unique_ptr<tensorflow::Session>* session);
         bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
         bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
         bool NMTBatchGraph(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
