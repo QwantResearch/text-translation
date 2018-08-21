@@ -46,6 +46,18 @@ void Split_str(const std::string& line, std::vector<std::string>& pieces, const 
     pieces.push_back(token);
 }
 
+std::string Join_str(const std::vector<std::string>& words, const std::string del) 
+{
+  std::stringstream ss;
+  if (words.empty()) {
+    return "";
+  }
+  ss << words[0];
+  for (size_t i = 1; i < words.size(); ++i) {
+    ss << del << words[i];
+  }
+  return ss.str();
+}
 
 void str_to_utf8(string& line)
 {
@@ -260,13 +272,21 @@ bool qnmt::NMTBatch(
     std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
   // Pad batch.
   std::vector<tensorflow::int32> lengths = PadBatch(batch_tokens);
+  for (int l_i=0; l_i < (int)batch_tokens.size(); l_i++)
+  {
+     cerr << "Id " <<l_i << endl;
+     cerr << "Batch Content : " << Join_str(batch_tokens[l_i]," ") << endl;
+  }
 
-  tensorflow::int64 batch_size = batch_tokens.size();
-  tensorflow::int64 max_length = batch_tokens.front().size();
+  tensorflow::int64 batch_size = (long)batch_tokens.size();
+  tensorflow::int64 max_length = (long)batch_tokens.front().size();
   
   std::vector<tensorflow::string> flat_batch_tokens = FlattenVector(batch_tokens);
   tensorflow::Tensor tokens_tensor = AsTensor(flat_batch_tokens, {batch_size, max_length});
   tensorflow::Tensor lengths_tensor = AsTensor(lengths);
+  cerr <<"Tokens: " << tokens_tensor.SummarizeValue(250) << endl;
+  cerr <<"Lenghts: "<< lengths_tensor.SummarizeValue(250) << endl;
+
 
   // Resolve name of inputs to fed and outputs to fetch.
   const auto signature_def_map = _bundle.meta_graph_def.signature_def();
@@ -275,30 +295,53 @@ bool qnmt::NMTBatch(
   const tensorflow::string length_input_name = signature_def.inputs().at("length").name();
   const tensorflow::string tokens_output_name = signature_def.outputs().at("tokens").name();
   const tensorflow::string length_output_name = signature_def.outputs().at("length").name();
+  const tensorflow::string probs_output_name = signature_def.outputs().at("log_probs").name();
 
   // Forward in the graph.
   std::vector<tensorflow::Tensor> outputs;
-  tensorflow::Status run_status = _bundle.session->Run({{tokens_input_name, tokens_tensor}, {length_input_name, lengths_tensor}}, {tokens_output_name, length_output_name}, {}, &outputs);
+  tensorflow::Status run_status = _bundle.session->Run({{tokens_input_name, tokens_tensor}, {length_input_name, lengths_tensor}}, {tokens_output_name, length_output_name, probs_output_name}, {}, &outputs);
 
   if (!run_status.ok()) {
     std::cerr << "Running model failed: " << run_status << std::endl;
     return false;
   }
-
+  for (int l_i=0; l_i < (int)outputs.size(); l_i++)
+  {
+     cerr << "Id " <<l_i << endl;
+     cerr << "Content : " << outputs[l_i].SummarizeValue(250) << endl;
+  }
   // Convert TensorFlow tensors to Eigen tensors.
   auto e_tokens = outputs[0].tensor<tensorflow::string,3>();
   auto e_length = outputs[1].matrix<tensorflow::int32>();
+  //auto e_probs = outputs[2].matrix<tensorflow::float>();
+  long prev=0;
   // Collect results in C++ vectors.
+  cerr << batch_size << endl;
   for (long b = 0; b < batch_size; ++b) 
   {
-      long len = e_length(b, 0);
-      std::vector<tensorflow::string> output_tokens;
-      output_tokens.reserve(len);
-      for (long i = 0; i < len - 1; ++i) 
-      {
-          output_tokens.push_back(e_tokens(b, 0, i));
-      }
-      output_batch_tokens.push_back(output_tokens);
+//      long len = e_length(b, 0);
+//      std::vector<tensorflow::string> output_tokens;
+//      output_tokens.reserve(len);
+//      for (long i = 0; i < len - 1; ++i) 
+//      {
+//          output_tokens.push_back(e_tokens(b, 0, i));
+//      }
+//      output_batch_tokens.push_back(output_tokens);
+    long len = prev+e_length(b, 0);
+//      cerr << len << endl;
+//      cerr << vec_length[b] << endl;
+    std::vector<tensorflow::string> output_tokens;
+    output_tokens.reserve(len);
+    for (long i = prev; i < len-1 ; ++i) 
+    {
+//      cerr << vec_tokens[i] << endl;
+//         cerr << str_to_utf8(vec_tokens[i])<< endl;
+        string tmp_token=e_tokens(b, prev, i);
+        str_to_utf8(tmp_token);
+        output_tokens.push_back(tmp_token);
+    }
+    prev=len;
+    output_batch_tokens.push_back(output_tokens);
   }
 
   return true;

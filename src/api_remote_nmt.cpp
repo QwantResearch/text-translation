@@ -133,13 +133,23 @@ public:
     {
         vector<string> to_process = _bpe->Segment(input);
 	cerr << input << endl;
-	for (int i=0; (int)i<(int)to_process.size() ; i++)
-	{
-		cerr << to_process.at(i)<<endl;
-	}
+        vector<string> to_process_tmp;
         vector<vector<string> > to_translate;
 
-        to_translate.push_back(to_process);
+	for (int i=0; (int)i<(int)to_process.size() ; i++)
+	{
+                to_process_tmp.push_back(to_process[i]);
+		if (((i > 0) && (i<(int)to_process.size() - 1) && to_process[i].compare(".") == 0 ) || i == (int)to_process.size()-1)
+                {
+                       
+                       to_translate.push_back(to_process_tmp);
+                       to_process_tmp.clear();
+                }
+		cerr << to_process.at(i)<<endl;
+	}
+//        vector<vector<string> > to_translate;
+
+//        to_translate.push_back(to_process);
         if (_local == 1) return _model.NMTBatch(to_translate,output);
         return _model.NMTBatchOnline(to_translate,output);
     }
