@@ -46,6 +46,9 @@
 #include "tensorflow/core/util/command_line_flags.h"
 #include "tensorflow_serving/apis/prediction_service.grpc.pb.h"
 
+#include "tensorflow/core/graph/default_device.h"
+#include "tensorflow/core/graph/graph_def_builder.h"
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
@@ -53,6 +56,12 @@ using grpc::Status;
 using tensorflow::serving::PredictRequest;
 using tensorflow::serving::PredictResponse;
 using tensorflow::serving::PredictionService;
+
+using tensorflow::Flag;
+using tensorflow::Tensor;
+using tensorflow::Status;
+using tensorflow::string;
+using tensorflow::int32;
 
 typedef google::protobuf::Map<tensorflow::string, tensorflow::TensorProto> OutMap;
 
@@ -110,12 +119,15 @@ class qnmt
         void PrintBatch(const std::vector<std::vector<tensorflow::string> >& batch_tokens);
         std::vector<tensorflow::int32> PadBatch(std::vector<std::vector<tensorflow::string> >& batch_tokens);
         bool LoadModel(const tensorflow::string& export_dir);
+        bool LoadGraph(const std::string& graph_file);
         bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
         bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool NMTBatchGraph(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
         bool NMTBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
         bool getLocal();
     private:
       tensorflow::SavedModelBundle _bundle;
+      std::unique_ptr<tensorflow::Session> _session;
       shared_ptr<PredictionService::Stub> _stub;
       bool _local;
       string _model_name;

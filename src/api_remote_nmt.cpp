@@ -108,6 +108,11 @@ public:
                 _model.LoadModel(dirname);
                 cerr << "Model is locally loaded" <<endl;
         }
+        else if (local == 2)
+        {
+                _model.LoadGraph(dirname);
+                cerr << "Graph is locally loaded" <<endl;
+        }
         else _model.LoadModel(string(src+"-"+tgt+"-"+domain), grpc::CreateChannel(dirname,grpc::InsecureChannelCredentials()));
         cerr << "*************************************" <<endl;
         _domain = domain;
@@ -121,6 +126,7 @@ public:
     bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
     {
         if (_local == 1) return _model.NMTBatch(input,output);
+        if (_local == 2) return _model.NMTBatchGraph(input,output);
         return _model.NMTBatchOnline(input,output);
     }
     bool batch_NMT(string& input, vector<vector<string>>& output)
