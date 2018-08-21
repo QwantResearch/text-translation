@@ -357,8 +357,8 @@ private:
         if (j.find("text") != j.end())
         {
             string text=j["text"]; 
-            string src=j["src"]; 
-            string tgt=j["tgt"]; 
+            string src=j["source"]; 
+            string tgt=j["target"]; 
             qtokenizer l_tok(src,false);
             
             
