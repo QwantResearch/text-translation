@@ -122,9 +122,9 @@ class qnmt
         bool LoadGraph(const std::string& graph_file);
         tensorflow::Status LoadGraph(const string& graph_file_name, std::unique_ptr<tensorflow::Session>* session);
         bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
-        bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
-        bool NMTBatchGraph(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
-        bool NMTBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens);
+        bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
+        bool NMTBatchGraph(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
+        bool NMTBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
         bool getLocal();
     private:
       tensorflow::SavedModelBundle _bundle;
