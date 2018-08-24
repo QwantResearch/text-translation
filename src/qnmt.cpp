@@ -248,8 +248,8 @@ void qnmt::PrintBatch(
 }
 
 // Pads a batch of tokens and returns the length of each sequence.
-std::vector<tensorflow::int32> qnmt::PadBatch(
-    std::vector<std::vector<tensorflow::string> >& batch_tokens) {
+std::vector<tensorflow::int32> qnmt::PadBatch(std::vector<std::vector<tensorflow::string> >& batch_tokens) 
+{
   std::vector<tensorflow::int32> lengths;
   size_t max_length = 0;
 
@@ -269,14 +269,16 @@ std::vector<tensorflow::int32> qnmt::PadBatch(
 // Tanslates a batch of tokenizes sentences.
 bool qnmt::NMTBatch(
     std::vector<std::vector<tensorflow::string> > batch_tokens,
-    std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
+    std::vector<std::vector<tensorflow::string> >& output_batch_tokens,
+    std::vector<float>& output_batch_scores
+                   ) {
   // Pad batch.
   std::vector<tensorflow::int32> lengths = PadBatch(batch_tokens);
-  for (int l_i=0; l_i < (int)batch_tokens.size(); l_i++)
-  {
-     cerr << "Id " <<l_i << endl;
-     cerr << "Batch Content : " << Join_str(batch_tokens[l_i]," ") << endl;
-  }
+//   for (int l_i=0; l_i < (int)batch_tokens.size(); l_i++)
+//   {
+//      cerr << "Id " <<l_i << endl;
+//      cerr << "Batch Content : " << Join_str(batch_tokens[l_i]," ") << endl;
+//   }
 
   tensorflow::int64 batch_size = (long)batch_tokens.size();
   tensorflow::int64 max_length = (long)batch_tokens.front().size();
@@ -284,8 +286,8 @@ bool qnmt::NMTBatch(
   std::vector<tensorflow::string> flat_batch_tokens = FlattenVector(batch_tokens);
   tensorflow::Tensor tokens_tensor = AsTensor(flat_batch_tokens, {batch_size, max_length});
   tensorflow::Tensor lengths_tensor = AsTensor(lengths);
-  cerr <<"Tokens: " << tokens_tensor.SummarizeValue(250) << endl;
-  cerr <<"Lenghts: "<< lengths_tensor.SummarizeValue(250) << endl;
+//   cerr <<"Tokens: " << tokens_tensor.SummarizeValue(250) << endl;
+//   cerr <<"Lenghts: "<< lengths_tensor.SummarizeValue(250) << endl;
 
 
   // Resolve name of inputs to fed and outputs to fetch.
@@ -305,20 +307,32 @@ bool qnmt::NMTBatch(
     std::cerr << "Running model failed: " << run_status << std::endl;
     return false;
   }
-  for (int l_i=0; l_i < (int)outputs.size(); l_i++)
-  {
-     cerr << "Id " <<l_i << endl;
-     cerr << "Content : " << outputs[l_i].SummarizeValue(250) << endl;
-  }
+//   for (int l_i=0; l_i < (int)outputs.size(); l_i++)
+//   {
+//      cerr << "Id " <<l_i << endl;
+//      cerr << "Content : " << outputs[l_i].SummarizeValue(500) << endl;
+//   }
   // Convert TensorFlow tensors to Eigen tensors.
   auto e_tokens = outputs[0].tensor<tensorflow::string,3>();
   auto e_length = outputs[1].matrix<tensorflow::int32>();
-  //auto e_probs = outputs[2].matrix<tensorflow::float>();
-  long prev=0;
-  // Collect results in C++ vectors.
-  cerr << batch_size << endl;
-  for (long b = 0; b < batch_size; ++b) 
+  auto e_probs = outputs[2].matrix<float>();
+  vector<long> e_length_shape;
+  for (long s = 0; s < batch_size; s++) 
   {
+      e_length_shape.push_back(outputs[1].shape().dim_size(s));
+  }
+    
+  // Collect results in C++ vectors.
+//   cerr << outputs[1].shape() << endl;
+//   cerr << outputs[1].shape().dim_size(0) << endl;
+//   cerr << outputs[1].shape().dim_size(1) << endl;
+//   cerr << outputs[1].shape(1) << endl;
+//   cerr << batch_size << endl;
+  long prev=0;
+  for (long b = 0; b < batch_size; b++) 
+  {
+      for (long nb = 0 ; nb < e_length_shape[1]; nb++)
+      {
 //      long len = e_length(b, 0);
 //      std::vector<tensorflow::string> output_tokens;
 //      output_tokens.reserve(len);
@@ -327,30 +341,56 @@ bool qnmt::NMTBatch(
 //          output_tokens.push_back(e_tokens(b, 0, i));
 //      }
 //      output_batch_tokens.push_back(output_tokens);
-    long len = prev+e_length(b, 0);
-//      cerr << len << endl;
-//      cerr << vec_length[b] << endl;
-    std::vector<tensorflow::string> output_tokens;
-    output_tokens.reserve(len);
-    for (long i = prev; i < len-1 ; ++i) 
-    {
-//      cerr << vec_tokens[i] << endl;
-//         cerr << str_to_utf8(vec_tokens[i])<< endl;
-        string tmp_token=e_tokens(b, prev, i);
-        str_to_utf8(tmp_token);
-        output_tokens.push_back(tmp_token);
-    }
-    prev=len;
-    output_batch_tokens.push_back(output_tokens);
+        long len = e_length(b, nb);
+//         cerr << "*******************" << endl;
+//         cerr << prev << endl;
+//         cerr << len << endl;
+    //      cerr << vec_length[b] << endl;
+        std::vector<tensorflow::string> output_tokens;
+        output_tokens.reserve(len);
+        for (long i = 0; i < len-1 ; ++i) 
+        {
+    //      cerr << vec_tokens[i] << endl;
+    //         cerr << str_to_utf8(vec_tokens[i])<< endl;
+            string tmp_token=e_tokens(b, nb, i);
+            str_to_utf8(tmp_token);
+            output_tokens.push_back(tmp_token);
+        }
+//         prev=len;
+//         stringstream ss;
+//         ss << e_probs(b, nb);
+//         output_tokens.push_back(ss.str());
+        if (b == 0) 
+        {
+            output_batch_tokens.push_back(output_tokens);
+            output_batch_scores.push_back(e_probs(b, nb));
+        }
+        else 
+        {
+            output_batch_tokens.at(nb).insert(output_batch_tokens.at(nb).end(), output_tokens.begin(), output_tokens.end() );
+            output_batch_scores.at(nb)=output_batch_scores.at(nb)+e_probs(b, nb);
+        }
+      }
   }
-
+//   for (long b = 0; b < (long)output_batch_tokens.size(); b++) 
+//   {
+//       cerr << "Outputs : " << endl;
+//       for (long nb = 0 ; nb < (long)output_batch_tokens[b].size(); nb++)
+//       {
+//           cerr << output_batch_tokens[b][nb] << " ";
+//       }
+//       cerr << endl;
+//   }
+  
   return true;
 }
 
 // Tanslates a batch of tokenizes sentences.
 bool qnmt::NMTBatchGraph(
     std::vector<std::vector<tensorflow::string> > batch_tokens,
-    std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
+    std::vector<std::vector<tensorflow::string> >& output_batch_tokens,
+    std::vector<float>& output_batch_scores) 
+            {
   // Pad batch.
   std::vector<tensorflow::int32> lengths = PadBatch(batch_tokens);
 
@@ -405,7 +445,9 @@ bool qnmt::NMTBatchGraph(
 // Tanslates a batch of tokenizes sentences.
 bool qnmt::NMTBatchOnline(
     std::vector<std::vector<tensorflow::string> > batch_tokens,
-    std::vector<std::vector<tensorflow::string> >& output_batch_tokens) {
+    std::vector<std::vector<tensorflow::string> >& output_batch_tokens,
+    std::vector<float>& output_batch_scores) 
+            {
   // Pad batch.
   // Pad batch.
   std::vector<tensorflow::int32> lengths = PadBatch(batch_tokens);

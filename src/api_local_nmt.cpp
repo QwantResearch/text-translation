@@ -106,11 +106,11 @@ public:
         _tgt=tgt;
     }
     
-    bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
+    bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
     {
-        return _model.NMTBatch(input,output);
+        return _model.NMTBatch(input,output,scores_result_batched);
     }
-    bool batch_NMT(string& input, vector<vector<string>>& output)
+    bool batch_NMT(string& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
     {
         vector<string> to_process = _bpe->Segment(input);
 	cerr << input << endl;
@@ -121,7 +121,7 @@ public:
         vector<vector<string> > to_translate;
 
         to_translate.push_back(to_process);
-        return _model.NMTBatch(to_translate,output);
+        return _model.NMTBatch(to_translate,output,scores_result_batched);
     }
     std::string getDomain()
     {
@@ -262,6 +262,7 @@ private:
     bool askNMT(string &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
+        vector<float> scores_result_batched ;
         
         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
@@ -269,7 +270,7 @@ private:
         }); 
         if (it_nmt != _list_nmt.end())
         {
-            (*it_nmt)->batch_NMT(input,result_batched);
+            (*it_nmt)->batch_NMT(input,result_batched,scores_result_batched);
         }
         else
         {

@@ -123,16 +123,16 @@ public:
 
     }
     
-    bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output)
+    bool batch_NMT(vector<vector<string>>& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
     {
-        if (_local == 1) return _model.NMTBatch(input,output);
-        if (_local == 2) return _model.NMTBatchGraph(input,output);
-        return _model.NMTBatchOnline(input,output);
+        if (_local == 1) return _model.NMTBatch(input,output,scores_result_batched);
+        if (_local == 2) return _model.NMTBatchGraph(input,output,scores_result_batched);
+        return _model.NMTBatchOnline(input,output,scores_result_batched);
     }
-    bool batch_NMT(string& input, vector<vector<string>>& output)
+    bool batch_NMT(string& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
     {
         vector<string> to_process = _bpe->Segment(input);
-	cerr << input << endl;
+// 	cerr << input << endl;
         vector<string> to_process_tmp;
         vector<vector<string> > to_translate;
 
@@ -145,13 +145,13 @@ public:
                        to_translate.push_back(to_process_tmp);
                        to_process_tmp.clear();
                 }
-		cerr << to_process.at(i)<<endl;
+// 		cerr << to_process.at(i)<<endl;
 	}
 //        vector<vector<string> > to_translate;
 
 //        to_translate.push_back(to_process);
-        if (_local == 1) return _model.NMTBatch(to_translate,output);
-        return _model.NMTBatchOnline(to_translate,output);
+        if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
+        return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
     }
     std::string getDomain()
     {
@@ -293,6 +293,7 @@ private:
     bool askNMT(string &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
     {
         vector<vector<string> > result_batched ;
+        vector<float> scores_result_batched ;
         
         auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
         {
@@ -300,18 +301,21 @@ private:
         }); 
         if (it_nmt != _list_nmt.end())
         {
-            (*it_nmt)->batch_NMT(input,result_batched);
+            (*it_nmt)->batch_NMT(input,result_batched,scores_result_batched);
         }
         else
         {
             return false;
         }
+        vector<string> translation_concat_vec;
+        vector<float> translation_scores_vec;
         string  translation_concat("");
         string  curr_token("");
         string  word_concat("");
         for (int i=0;i<(int)result_batched.size();i++)
         {
-            for (int j=0;j<(int)result_batched.at(i).size();j++)
+            int j=0;
+            for (j=0;j<(int)result_batched.at(i).size();j++)
             {
                 json j_tmp;
                 curr_token=result_batched.at(i).at(j);
@@ -319,14 +323,18 @@ private:
                 if (translation_concat.length() > 0) translation_concat.append(" ");
                 translation_concat.append(curr_token);
             }
+            int sep_pos = (int)translation_concat.find("@@");
+            while (sep_pos > -1)
+            {
+                translation_concat=translation_concat.erase(sep_pos,3);
+                sep_pos = (int)translation_concat.find("@@");
+            }
+            translation_concat_vec.push_back(translation_concat);
+//             translation_scores_vec.push_back(atof(result_batched.at(i).at(j).c_str()));
+            translation_concat.clear();
         }
-        int sep_pos = (int)translation_concat.find("@@");
-        while (sep_pos > -1)
-        {
-            translation_concat=translation_concat.erase(sep_pos,3);
-            sep_pos = (int)translation_concat.find("@@");
-        }
-        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat));
+        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat_vec));
+        output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), scores_result_batched));
         return true;
     }
     void doNMTGet(const Rest::Request& request, Http::ResponseWriter response) {
