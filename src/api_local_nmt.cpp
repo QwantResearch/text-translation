@@ -346,10 +346,13 @@ private:
             vector<string> tokenized_vec = l_tok.tokenize(text) ;
             vector<vector<string> > tokenized_batched ;
             vector<string> line_tokenized;
+	    cerr <<  (int)tokenized_vec.size() << endl;
             for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
             {
                 line_tokenized.push_back(tokenized_vec[l_inc]);
-                if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() == 1 && (tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("\n")==0)))
+		cerr << (int)tokenized_vec[l_inc].find(".") << endl;
+		cerr << (int)tokenized_vec[l_inc].find("\n") << endl;
+                if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() > 0 && ((int)tokenized_vec[l_inc].find(".")==0 || (int)tokenized_vec[l_inc].find("\n")==0)))
                 {
                     tokenized_batched.push_back(line_tokenized);
                     line_tokenized.clear();
@@ -375,6 +378,7 @@ private:
         }
         std::string s=j.dump();
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+        cerr << "DEBUG: " << s << endl;
         response.send(Http::Code::Ok, std::string(s));
     }
     void writeLog(string text_to_log)

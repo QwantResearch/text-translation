@@ -307,32 +307,38 @@ bool qnmt::NMTBatch(
     std::cerr << "Running model failed: " << run_status << std::endl;
     return false;
   }
-//   for (int l_i=0; l_i < (int)outputs.size(); l_i++)
-//   {
-//      cerr << "Id " <<l_i << endl;
-//      cerr << "Content : " << outputs[l_i].SummarizeValue(500) << endl;
-//   }
+  for (int l_i=0; l_i < (int)outputs.size(); l_i++)
+  {
+     cerr << "Id " <<l_i << endl;
+     cerr << "Content : " << outputs[l_i].SummarizeValue(500) << endl;
+  }
   // Convert TensorFlow tensors to Eigen tensors.
   auto e_tokens = outputs[0].tensor<tensorflow::string,3>();
   auto e_length = outputs[1].matrix<tensorflow::int32>();
   auto e_probs = outputs[2].matrix<float>();
-  vector<long> e_length_shape;
-  for (long s = 0; s < batch_size; s++) 
-  {
-      e_length_shape.push_back(outputs[1].shape().dim_size(s));
-  }
+//  vector<long> e_length_shape;
+//  for (long s = 0; s < batch_size; s++) 
+//  {
+//      e_length_shape.push_back(outputs[1].shape().dim_size(s));
+//      cerr << "outputs[1].shape() " << outputs[1].shape() << endl;
+//      cerr << "outputs[1].shape().dim_size(s) " << outputs[1].shape().dim_size(s) << endl;
+//  }
     
   // Collect results in C++ vectors.
 //   cerr << outputs[1].shape() << endl;
 //   cerr << outputs[1].shape().dim_size(0) << endl;
 //   cerr << outputs[1].shape().dim_size(1) << endl;
 //   cerr << outputs[1].shape(1) << endl;
-//   cerr << batch_size << endl;
+//  cerr << "Batch Size: " << batch_size << endl;
   long prev=0;
-  for (long b = 0; b < batch_size; b++) 
+  for (long b = 0; b < e_length.dimension(0); b++) 
   {
-      for (long nb = 0 ; nb < e_length_shape[1]; nb++)
+//	cerr << "e_length_shape: " << e_length_shape[b] << endl;
+      for (long nb = 0 ; nb < e_length.dimension(1); nb++)
       {
+//	cerr << e_length.rank() << endl;
+//        cerr << e_length.dimension(0) << endl;
+//	cerr << e_length.dimension(1) << endl;
 //      long len = e_length(b, 0);
 //      std::vector<tensorflow::string> output_tokens;
 //      output_tokens.reserve(len);
@@ -522,7 +528,7 @@ bool qnmt::NMTBatchOnline(
   vector<string> vec_tokens;
   Split_str(e_length.SummarizeValue(250).substr(1).substr(0,e_length.SummarizeValue(250).size()-1),vec_length, " ");
   Split_str(e_tokens.SummarizeValue(250),vec_tokens, " ");
-//   cerr << batch_size <<endl;
+  cerr << batch_size <<endl;
   for (long b = 0; b < batch_size; ++b) 
   {
     long len = prev+atol(vec_length[b].c_str());

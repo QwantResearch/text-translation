@@ -139,7 +139,8 @@ public:
 	for (int i=0; (int)i<(int)to_process.size() ; i++)
 	{
                 to_process_tmp.push_back(to_process[i]);
-		if (((i > 0) && (i<(int)to_process.size() - 1) && to_process[i].compare(".") == 0 ) || i == (int)to_process.size()-1)
+  		cerr << to_process[i] << endl;
+		if (((i > 0) && (i<(int)to_process.size() - 1) && (int)to_process[i].find(".") == 0 ) || i == (int)to_process.size()-1)
                 {
                        
                        to_translate.push_back(to_process_tmp);
@@ -381,20 +382,22 @@ private:
             
             
             j.push_back( nlohmann::json::object_t::value_type(string("tokenized"), l_tok.tokenize_str(text) ));
-            vector<string> tokenized_vec = l_tok.tokenize(text) ;
+/*            vector<string> tokenized_vec = l_tok.tokenize(text) ;
             vector<vector<string> > tokenized_batched ;
             vector<string> line_tokenized;
             for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
             {
                 line_tokenized.push_back(tokenized_vec[l_inc]);
-                if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() == 1 && (tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("\n")==0)))
+		cerr << tokenized_vec[l_inc].compare(".") << endl;
+		cerr << tokenized_vec[l_inc].compare("\n") << endl;
+                if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() > 0 && (tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("\n")==0)))
                 {
                     tokenized_batched.push_back(line_tokenized);
                     line_tokenized.clear();
                 }
             }
 //             cerr << tokenized_batched.size() << endl;
-            if (debugmode) j.push_back( nlohmann::json::object_t::value_type(string("tokenized_vec"), tokenized_batched ));
+            if (debugmode) j.push_back( nlohmann::json::object_t::value_type(string("tokenized_vec"), tokenized_batched )); */
             if (j.find("domain") != j.end())
             {
                 string domain=j["domain"]; 
