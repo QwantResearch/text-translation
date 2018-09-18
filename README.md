@@ -1,4 +1,4 @@
-# Qnlu
+# Qtranslate
 
 A new Python API for Machine Translation at Qwant Research.
 The API is based on tensorflow library.
