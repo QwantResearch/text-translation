@@ -242,7 +242,7 @@ private:
         string response_str="{\"models\":[";
         for (int i=0; i<(int) _list_nmt.size(); i++)
         {
-            if ((int)response_str.length() != 0) response_str.append(",");
+            if ( i != 0 ) response_str.append(",");
             response_str.append("\"");
             response_str.append(_list_nmt.at(i)->_src);
             response_str.append("-");
