@@ -61,6 +61,19 @@ void handleReady(const Rest::Request&, Http::ResponseWriter response) {
 
 }
 
+const std::string currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
+
+
 class Classifier {
 public:
     Classifier(std::string filename, string domain)
@@ -139,7 +152,7 @@ public:
 	for (int i=0; (int)i<(int)to_process.size() ; i++)
 	{
                 to_process_tmp.push_back(to_process[i]);
-  		cerr << to_process[i] << endl;
+//   		cerr << to_process[i] << endl;
 		if (((i > 0) && (i<(int)to_process.size() - 1) && (int)to_process[i].find(".") == 0 ) || i == (int)to_process.size()-1)
                 {
                        
@@ -219,8 +232,8 @@ private:
     void setupRoutes() {
         using namespace Rest;
         Routes::Post(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTPost, this));
-        Routes::Get(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTGet, this));
-        Routes::Get(router, "/languages/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
+        Routes::Get(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
+//         Routes::Get(router, "/languages/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
 
     }
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
@@ -237,6 +250,7 @@ private:
             response_str.append(_list_nmt.at(i)->_domain);
         }
         response_str="{\""+response_str+"\"]}";
+        cerr << "LOG: "<< currentDateTime() << "\t" << response_str << endl;
         response.send(Pistache::Http::Code::Ok, response_str);
     }
     
@@ -338,10 +352,10 @@ private:
         output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), scores_result_batched));
         return true;
     }
-    void doNMTGet(const Rest::Request& request, Http::ResponseWriter response) {
-        response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
-        response.send(Pistache::Http::Code::Ok, "{\"message\":\"success\"}");
-    }
+//     void doNMTGet(const Rest::Request& request, Http::ResponseWriter response) {
+//         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
+//         response.send(Pistache::Http::Code::Ok, "{\"message\":\"success\"}");
+//     }
     void doNMTPost(const Rest::Request& request, Http::ResponseWriter response) 
     {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
@@ -416,6 +430,7 @@ private:
         }
         std::string s=j.dump();
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+        cerr << "LOG: "<< currentDateTime() << "\t" << s << endl;
         response.send(Http::Code::Ok, std::string(s));
     }
     void writeLog(string text_to_log)

@@ -2,6 +2,7 @@
 
 A new Python API for Machine Translation at Qwant Research.
 The API is based on tensorflow library.
+It using the tensorflow version of OpenNMT toolkit https://github.com/OpenNMT/OpenNMT-tf/
 
 Contact: christophe[dot]servan[at]qwantresearch[dot]com
 
