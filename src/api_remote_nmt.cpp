@@ -239,17 +239,19 @@ private:
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-        string response_str("");
+        string response_str="{\"models\":[";
         for (int i=0; i<(int) _list_nmt.size(); i++)
         {
             if ((int)response_str.length() != 0) response_str.append(",");
+            response_str.append("\"");
             response_str.append(_list_nmt.at(i)->_src);
             response_str.append("-");
             response_str.append(_list_nmt.at(i)->_tgt);
             response_str.append("-");
             response_str.append(_list_nmt.at(i)->_domain);
+            response_str.append("\"");
         }
-        response_str="{\""+response_str+"\"]}";
+        response_str.append("]}");
         cerr << "LOG: "<< currentDateTime() << "\t" << response_str << endl;
         response.send(Pistache::Http::Code::Ok, response_str);
     }
