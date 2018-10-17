@@ -245,9 +245,7 @@ private:
     }
 
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
-        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Get);
-        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Post);
-        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Options);
+        response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
         string response_str="{\"models\":[";
