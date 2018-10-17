@@ -238,12 +238,16 @@ private:
 
     }
     void doNMTOptions(const Rest::Request& request, Http::ResponseWriter response) {
+        response.headers().add<Http::Header::Allow>();
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
         response.send(Pistache::Http::Code::No_Content, "{\"message\":\"success\"}");
     }
 
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
+        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Get);
+        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Post);
+        response.headers().add<Http::Header::Allow>(Pistache::Http::Method::Options);
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
         string response_str="{\"models\":[";
