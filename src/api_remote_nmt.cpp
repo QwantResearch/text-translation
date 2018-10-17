@@ -238,7 +238,7 @@ private:
 
     }
     void doNMTOptions(const Rest::Request& request, Http::ResponseWriter response) {
-        response.headers().add<Http::Header::Allow>();
+        response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
         response.send(Pistache::Http::Code::No_Content, "{\"message\":\"success\"}");
@@ -369,6 +369,7 @@ private:
 //     }
     void doNMTPost(const Rest::Request& request, Http::ResponseWriter response) 
     {
+        response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         nlohmann::json j = nlohmann::json::parse(request.body());
         int count=10;
