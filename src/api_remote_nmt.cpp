@@ -377,6 +377,7 @@ private:
         nlohmann::json j = nlohmann::json::parse(request.body());
         int count=10;
         bool debugmode = false;
+        cerr << "LOG [ASK]: "<< currentDateTime() << "\t" << request.body() << endl;
         
         if (j.find("source") == j.end())
         {
@@ -445,7 +446,7 @@ private:
         }
         std::string s=j.dump();
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-        cerr << "LOG: "<< currentDateTime() << "\t" << s << endl;
+        cerr << "LOG [RES]: "<< currentDateTime() << "\t" << s << endl;
         response.send(Http::Code::Ok, std::string(s));
     }
     void writeLog(string text_to_log)
