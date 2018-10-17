@@ -233,9 +233,16 @@ private:
         using namespace Rest;
         Routes::Post(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTPost, this));
         Routes::Get(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
+        Routes::Options(router, "/translate/", Routes::bind(&StatsEndpoint::doNMTOptions, this));
 //         Routes::Get(router, "/languages/", Routes::bind(&StatsEndpoint::doNMTLanguagesGet, this));
 
     }
+    void doNMTOptions(const Rest::Request& request, Http::ResponseWriter response) {
+        response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
+        response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
+        response.send(Pistache::Http::Code::No_Content, "{\"message\":\"success\"}");
+    }
+
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
