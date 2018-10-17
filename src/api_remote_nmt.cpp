@@ -238,6 +238,7 @@ private:
 
     }
     void doNMTOptions(const Rest::Request& request, Http::ResponseWriter response) {
+        response.headers().add<Http::Header::AccessControlAllowHeaders>("Content-Type");
         response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
@@ -245,6 +246,7 @@ private:
     }
 
     void doNMTLanguagesGet(const Rest::Request& request, Http::ResponseWriter response) {
+        response.headers().add<Http::Header::AccessControlAllowHeaders>("Content-Type");
         response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
@@ -369,6 +371,7 @@ private:
 //     }
     void doNMTPost(const Rest::Request& request, Http::ResponseWriter response) 
     {
+        response.headers().add<Http::Header::AccessControlAllowHeaders>("Content-Type");
         response.headers().add<Http::Header::AccessControlAllowMethods>("GET, POST, DELETE, OPTIONS");
         response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
         nlohmann::json j = nlohmann::json::parse(request.body());
