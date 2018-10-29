@@ -114,8 +114,9 @@ public:
     NMT(std::string dirname, string domain, string src, string tgt, string bpe, int local)
     {
         cerr << "*************************************" <<endl;
-        cerr << "Model name: " << dirname <<endl;
-        cerr << "Model details: "<< string(src+"-"+tgt+"-"+domain)<<endl;
+        cerr << "Model name: |" << dirname <<"|"<<endl;
+	cerr << "Model domain: |" << domain <<"|"<<endl;
+        cerr << "Model details: |"<< string(src+"-"+tgt+"-"+domain)<<"|"<<endl;
         if (local == 1)
         {
                 _model.LoadModel(dirname);
@@ -322,45 +323,53 @@ private:
     {
         vector<vector<string> > result_batched ;
         vector<float> scores_result_batched ;
-        
-        auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
-        {
-            return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
-        }); 
-        if (it_nmt != _list_nmt.end())
-        {
-            (*it_nmt)->batch_NMT(input,result_batched,scores_result_batched);
-        }
-        else
-        {
-            return false;
-        }
         vector<string> translation_concat_vec;
         vector<float> translation_scores_vec;
         string  translation_concat("");
         string  curr_token("");
         string  word_concat("");
-        for (int i=0;i<(int)result_batched.size();i++)
-        {
-            int j=0;
-            for (j=0;j<(int)result_batched.at(i).size();j++)
-            {
-                json j_tmp;
-                curr_token=result_batched.at(i).at(j);
-//                 cerr << "output: " << curr_token << endl;
-                if (translation_concat.length() > 0) translation_concat.append(" ");
-                translation_concat.append(curr_token);
-            }
-            int sep_pos = (int)translation_concat.find("@@");
-            while (sep_pos > -1)
-            {
-                translation_concat=translation_concat.erase(sep_pos,3);
-                sep_pos = (int)translation_concat.find("@@");
-            }
-            translation_concat_vec.push_back(translation_concat);
-//             translation_scores_vec.push_back(atof(result_batched.at(i).at(j).c_str()));
-            translation_concat.clear();
-        }
+
+        if ((int)input.size() > 1 )
+	{
+        	auto it_nmt = std::find_if(_list_nmt.begin(), _list_nmt.end(), [&](NMT* l_nmt) 
+	        {
+	            return (l_nmt->_domain == domain && l_nmt->_src == src && l_nmt->_tgt == tgt) ;
+	        }); 
+	        if (it_nmt != _list_nmt.end())
+	        {
+	            (*it_nmt)->batch_NMT(input,result_batched,scores_result_batched);
+	        }
+	        else
+	        {
+	            return false;
+	        }
+	    	for (int i=0;i<(int)result_batched.size();i++)
+	       	{
+       	     		int j=0;
+       	     		for (j=0;j<(int)result_batched.at(i).size();j++)
+       	     		{
+       	         		json j_tmp;
+       	         		curr_token=result_batched.at(i).at(j);
+//     	            cerr << "output: " << curr_token << endl;
+       	         		if (translation_concat.length() > 0) translation_concat.append(" ");
+       	         		translation_concat.append(curr_token);
+       	     		}
+       	     		int sep_pos = (int)translation_concat.find("@@");
+       	     		while (sep_pos > -1)
+       	     		{
+       	         		translation_concat=translation_concat.erase(sep_pos,3);
+       	         		sep_pos = (int)translation_concat.find("@@");
+       	     		}
+	            	translation_concat_vec.push_back(translation_concat);
+//      	       translation_scores_vec.push_back(atof(result_batched.at(i).at(j).c_str()));
+	       	     	translation_concat.clear();
+	        }
+	}
+	else
+	{
+		translation_concat_vec.push_back(input);
+		scores_result_batched.push_back(-1000.00);
+	}
         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_concat_vec));
         output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), scores_result_batched));
         return true;
