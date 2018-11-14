@@ -24,7 +24,7 @@
 ###########################################################################
 cmake_minimum_required(VERSION 3.5)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpthread -fpermissive ")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpthread -fpermissive -L/usr/local/lib")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(LD_PRELOAD "libcurl.so.3")
@@ -32,11 +32,10 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 set(TF_DIR ${PROJECT_SOURCE_DIR}/../tensorflow/)
 set(TF_SERVING_DIR ${PROJECT_SOURCE_DIR}/../serving/)
-include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/ ${TF_SERVING_DIR} ${TF_SERVING_DIR}/bazel-genfiles )
-link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib/ /usr/local/lib/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/model_servers/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/apis/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/util/)
+include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/ ${TF_SERVING_DIR} ${TF_SERVING_DIR}/bazel-genfiles /usr/local/include)
+link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib /usr/local/lib ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/model_servers/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/apis/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/util/ /usr/lib /usr/local/lib)
 
 set(CMAKE_CXX_FLAGS "-O2 -std=c++11 -lpthread -fpermissive ")
-
 
 # set(NMT_EXECUTABLE_API api_nmt_local)
 # set(NMT_SOURCE_API 
@@ -46,6 +45,8 @@ set(CMAKE_CXX_FLAGS "-O2 -std=c++11 -lpthread -fpermissive ")
 #   ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
 #   ${PROJECT_SOURCE_DIR}/src/utils.cpp
 #   )
+
+
 set(NMT_REMOTE_API api_nmt_remote)
 set(NMT_SOURCE_REMOTE_API 
   ${PROJECT_SOURCE_DIR}/src/api_remote_nmt.cpp 
@@ -57,5 +58,16 @@ set(NMT_SOURCE_REMOTE_API
 # add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
 add_executable(${NMT_REMOTE_API} ${NMT_SOURCE_REMOTE_API})
 
+
+set(TEST_CLIENT client_moses)
+set(TEST_CLIENT_SRC 
+  ${PROJECT_SOURCE_DIR}/src/client_moses.cpp 
+  )
+# add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
+add_executable(${TEST_CLIENT} ${TEST_CLIENT_SRC})
+
 # target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
 target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
+
+target_link_libraries(${TEST_CLIENT} xmlrpc++ xmlrpc_client++ xmlrpc_util++)
+
