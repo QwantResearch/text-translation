@@ -23,11 +23,12 @@ int main(int argc, char **) {
         xmlrpc_c::value result;
         
         myClient.call(serverUrl, methodName, "text", &result, "This is a test");
+        cerr << result <<endl;
 
-        int const sum = xmlrpc_c::value_int(result);
+//         int const sum = xmlrpc_c::value_int(result);
             // Assume the method returned an integer; throws error if not
 
-        cout << "Result of RPC (sum of 5 and 7): " << sum << endl;
+//         cout << "Result of RPC (sum of 5 and 7): " << sum << endl;
 
     } catch (exception const& e) {
         cerr << "Client threw error: " << e.what() << endl;
