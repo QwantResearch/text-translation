@@ -27,10 +27,11 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
-
-#include <xmlrpc-c/girerr.hpp>
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/client_simple.hpp>
+#include <istream>
+#include <ostream>
+#include <string>
+#include <boost/asio.hpp>
+#include <nlohmann/json.hpp>
 
 using namespace std;
 
@@ -39,7 +40,7 @@ class qsmt
     public:
         qsmt();
         qsmt(const string& address, const string& name);
-        bool SMTBatch(std::string tokens, std::vector<tensorflow::string>& output_batch_tokens, std::vector<float>& output_batch_scores);
+        bool SMTBatch(std::string tokens, std::vector<string>& output_batch_tokens, std::vector<float>& output_batch_scores);
         bool getLocal();
     private:
       std::string _address;
