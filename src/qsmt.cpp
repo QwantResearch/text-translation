@@ -147,9 +147,17 @@ bool qsmt::NMTBatchSMT(vector< vector< string > > batch_tokens, vector< vector< 
       vloutput.clear();
       lscores=0.0;
       SMTBatch(linput,loutput,lscores);
-      output_batch_scores.push_back(lscores);
       Split(loutput,vloutput," ");
-      output_batch_tokens.push_back(vloutput);
+      if (i == 0)
+      {
+          output_batch_scores.push_back(lscores/(float)batch_tokens.size());
+          output_batch_tokens.push_back(vloutput);
+      }
+      else
+      {
+          output_batch_scores.at(0)=output_batch_scores.at(0)+lscores/(float)batch_tokens.size();
+          output_batch_tokens.at(0).insert(output_batch_tokens.at(0).end(), vloutput.begin(), vloutput.end());
+      }
   }
   return true;
 }
