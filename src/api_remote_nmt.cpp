@@ -37,6 +37,7 @@
 #include "qnmt.h"
 #include "utils.h"
 #include "bpe.h"
+#include <qsmt.h>
 
 using namespace std;
 using namespace nlohmann;
@@ -127,6 +128,16 @@ public:
                 _model.LoadGraph(dirname);
                 cerr << "Graph is locally loaded" <<endl;
         }
+        else if (local == 3)
+        {
+                std::string lhost=dirname.substr(0,dirname.find("/"));
+                std::string lroute=dirname.substr(dirname.find("/"),(int)dirname.size()-dirname.find("/"));
+                std::string lport=lhost.substr(lhost.find(":"),((int)lhost.size())-lhost.find(":"));
+                lhost=lhost.substr(0,lhost.find(":"));
+                
+                _modelsmt.setqsmt(lhost,lport, lroute, dirname);
+                cerr << "SMT is set" <<endl;
+        }
         else _model.LoadModel(string(src+"-"+tgt+"-"+domain), grpc::CreateChannel(dirname,grpc::InsecureChannelCredentials()));
         cerr << "*************************************" <<endl;
         _domain = domain;
@@ -141,6 +152,7 @@ public:
     {
         if (_local == 1) return _model.NMTBatch(input,output,scores_result_batched);
         if (_local == 2) return _model.NMTBatchGraph(input,output,scores_result_batched);
+        if (_local == 3) return _modelsmt.NMTBatchSMT(input,output,scores_result_batched);
         return _model.NMTBatchOnline(input,output,scores_result_batched);
     }
     bool batch_NMT(string& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
@@ -176,6 +188,7 @@ public:
 
 private:
     qnmt _model;
+    qsmt _modelsmt;
     BPE* _bpe;
 };
 

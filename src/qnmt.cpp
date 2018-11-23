@@ -27,37 +27,37 @@
 using namespace std;
 
 
-void Split_str(const std::string& line, std::vector<std::string>& pieces, const std::string del) {
-  size_t begin = 0;
-  size_t pos = 0;
-  std::string token;
-  while ((pos = line.find(del, begin)) != std::string::npos) {
-    if (pos > begin) {
-      token = line.substr(begin, pos - begin);
-      if(token.size() > 0)
-        pieces.push_back(token);
-    }
-    begin = pos + del.size();
-  }
-  if (pos > begin) {
-    token = line.substr(begin, pos - begin);
-  }
-  if(token.size() > 0)
-    pieces.push_back(token);
-}
-
-std::string Join_str(const std::vector<std::string>& words, const std::string del) 
-{
-  std::stringstream ss;
-  if (words.empty()) {
-    return "";
-  }
-  ss << words[0];
-  for (size_t i = 1; i < words.size(); ++i) {
-    ss << del << words[i];
-  }
-  return ss.str();
-}
+// void Split_str(const std::string& line, std::vector<std::string>& pieces, const std::string del) {
+//   size_t begin = 0;
+//   size_t pos = 0;
+//   std::string token;
+//   while ((pos = line.find(del, begin)) != std::string::npos) {
+//     if (pos > begin) {
+//       token = line.substr(begin, pos - begin);
+//       if(token.size() > 0)
+//         pieces.push_back(token);
+//     }
+//     begin = pos + del.size();
+//   }
+//   if (pos > begin) {
+//     token = line.substr(begin, pos - begin);
+//   }
+//   if(token.size() > 0)
+//     pieces.push_back(token);
+// }
+// 
+// std::string Join_str(const std::vector<std::string>& words, const std::string del) 
+// {
+//   std::stringstream ss;
+//   if (words.empty()) {
+//     return "";
+//   }
+//   ss << words[0];
+//   for (size_t i = 1; i < words.size(); ++i) {
+//     ss << del << words[i];
+//   }
+//   return ss.str();
+// }
 
 void str_to_utf8(string& line)
 {
@@ -467,8 +467,8 @@ bool qnmt::NMTBatchOnline(
   long prev=0;
   vector<string> vec_length;
   vector<string> vec_tokens;
-  Split_str(e_length.SummarizeValue(512).substr(1).substr(0,e_length.SummarizeValue(512).size()-1),vec_length, " ");
-  Split_str(e_tokens.SummarizeValue(512),vec_tokens, " ");
+  Split(e_length.SummarizeValue(512).substr(1).substr(0,e_length.SummarizeValue(512).size()-1),vec_length, " ");
+  Split(e_tokens.SummarizeValue(512),vec_tokens, " ");
   for (long b = 0; b < batch_size; ++b) 
   {
     long len = prev+atol(vec_length[b].c_str());
@@ -492,3 +492,35 @@ bool qnmt::NMTBatchOnline(
  
   return true;
 }
+
+
+
+// bool qnmt::LoadModel(string& address, string& iport, string& route, string& name)
+// {
+//     _qsmt=new qsmt(address,iport,route,name);
+//     cerr << "Error" << endl;
+// }
+
+
+// Tanslates a batch of tokenizes sentences.
+// bool qnmt::NMTBatchSMT(vector< vector< string > > batch_tokens, vector< vector< string > >& output_batch_tokens, vector< float >& output_batch_scores)
+// {
+//   // Pad batch.
+//   std::string linput;
+//   std::string loutput;
+//   vector<std::string> vloutput;
+//   float lscores;
+//   for (int i=0; i< (int)batch_tokens.size(); i++)
+//   {
+//       linput=Join(batch_tokens.at(i)," ");
+//       loutput="";
+//       vloutput.clear();
+//       lscores=0.0;
+// //       _qsmt->SMTBatch(linput,loutput,lscores);
+//       output_batch_scores.push_back(lscores);
+//       Split(loutput,vloutput," ");
+//       output_batch_tokens.push_back(vloutput);
+//   }
+//   return true;
+// }
+

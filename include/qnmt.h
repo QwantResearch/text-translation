@@ -49,6 +49,9 @@
 
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/graph/graph_def_builder.h"
+#include "utils.h"
+
+// #include "qsmt.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -123,7 +126,9 @@ class qnmt
         bool LoadGraph(const std::string& graph_file);
         tensorflow::Status LoadGraph(const string& graph_file_name, std::unique_ptr<tensorflow::Session>* session);
         bool LoadModel(std::string model_name_param,shared_ptr<grpc::Channel> channel);
+//         bool LoadModel(std::string& address, std::string& iport, std::string& route, std::string& name);
         bool NMTBatch(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
+//         bool NMTBatchSMT(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
         bool NMTBatchGraph(std::vector<std::vector<tensorflow::string> > batch_tokens, std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
         bool NMTBatchOnline(std::vector<std::vector<tensorflow::string> > batch_tokens,std::vector<std::vector<tensorflow::string> >& output_batch_tokens, std::vector<float>& output_batch_scores);
         bool getLocal();
@@ -131,6 +136,7 @@ class qnmt
       tensorflow::SavedModelBundle _bundle;
       std::unique_ptr<tensorflow::Session> _session;
       shared_ptr<PredictionService::Stub> _stub;
+//       qsmt* _qsmt;
       bool _local;
       string _model_name;
   

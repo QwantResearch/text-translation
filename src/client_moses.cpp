@@ -15,13 +15,14 @@ using namespace boost::asio::ip;
 
 int main(int argc, char **) {
 
-    string _address("localhost");
-    string tokens("This is a test !");
     if (argc-1 > 0) {
         cerr << "This program has no arguments" << endl;
         exit(1);
     }
 
+    string _address("localhost");
+    string _iport("8888");
+    string tokens("This is a test !");
     try
     {    
         boost::asio::io_service io_service;
@@ -35,7 +36,7 @@ int main(int argc, char **) {
 
         // Get a list of endpoints corresponding to the server name.
         tcp::resolver resolver(io_service);
-        tcp::resolver::query query(_address, "8888");
+        tcp::resolver::query query(_address, _iport);
         tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
         // Try each endpoint until we successfully establish a connection.
@@ -49,8 +50,6 @@ int main(int argc, char **) {
         std::ostream request_stream(&request);
         request_stream << "POST /translation HTTP/1.0\r\n";
         request_stream << "Host: "<<_address<<"\r\n";
-//        request_stream << "Cache-Control: no-cache;\r\n";
-//        request_stream << "Authorization: customized-token; \r\n";
         request_stream << "Content-Type: application/json; charset=utf-8 \r\n";
         request_stream << "Accept: */*\r\n";
         request_stream << "Content-Length: " << s.size() << "\r\n";    
@@ -76,50 +75,21 @@ int main(int argc, char **) {
         unsigned int status_code;
         response_stream >> status_code;
         std::string status_message;
-        std::getline(response_stream, status_message);
-//         if (!response_stream || http_version.substr(0, 5) != "HTTP/")
-//         {
-//           std::cout << "Invalid response\n";
-//           return 1;
-//         }
-//        if (status_code != 200)
-//        {
-//          std::cout << "Response returned with status code " << status_code << "\n";
-//          return 1;
-//        }
-
-        // Read the response headers, which are terminated by a blank line.
-//        boost::asio::read_until(socket, response, "\r\n\r\n");
-
-        // Process the response headers.
-//        std::string header;
-//        while (std::getline(response_stream, header))
-//          std::cout << header << "\n";
-//        std::cout << "\n";
-//	std::cout << "END HEADERS" << endl;
-
-        // Write whatever content we already have to output.
+//         std::getline(response_stream, status_message);
         stringstream ss;
-//        if (response.size() > 0)
-//        	cout << ss.str();
-//          std::cout << &response;
-//	std::cout << "END RESPONSE" << endl;
-
-        // Read until EOF, writing data to output as we go.
 
         boost::system::error_code error;
         while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
 		ss << &response;
- //         std::cout << &response;
 	string sstr=ss.str();
-//	cout << ss.str()<< endl;
-        cout << sstr.substr(sstr.find("{"),sstr.find("{")-sstr.rfind("}"));
+        string resp_content = sstr.substr(sstr.find("{"),sstr.find("{")-sstr.rfind("}"));
+        cout << resp_content;
 	cout << endl;
-	std::cout << "END RESPONSE 2" << endl;
+// 	std::cout << "END RESPONSE 2" << endl;
         if (error != boost::asio::error::eof)
           throw boost::system::system_error(error);
-        else
-          cerr << "end of stream" <<endl;
+//         else
+//           cerr << "end of stream" <<endl;
 	socket.close();
     }
     catch (std::exception& e)
