@@ -104,7 +104,7 @@ private:
     std::string _domain;
     fasttext::FastText _model;
 };
-
+  
 class NMT {
 public:
     std::string _domain;
@@ -157,7 +157,15 @@ public:
     }
     bool batch_NMT(string& input, vector<vector<string>>& output, vector<float>& scores_result_batched)
     {
-        vector<string> to_process = _bpe->Segment(input);
+        vector<string> to_process ;
+        if (_local != 3)
+        {
+            to_process = _bpe->Segment(input);
+        }
+        else
+        {
+            Split(input,to_process," ");
+        }
 // 	cerr << input << endl;
         vector<string> to_process_tmp;
         vector<vector<string> > to_translate;
@@ -178,6 +186,7 @@ public:
 
 //        to_translate.push_back(to_process);
         if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
+        if (_local == 3) return _model.NMTBatch(to_translate,output,scores_result_batched);
         return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
     }
     std::string getDomain()
