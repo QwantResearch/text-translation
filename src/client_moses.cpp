@@ -15,7 +15,7 @@ using namespace boost::asio::ip;
 
 int main(int argc, char **) {
 
-    string _address("localhost:8888/tranlation");
+    string _address("localhost");
     string tokens("Ceci est un test");
     if (argc-1 > 0) {
         cerr << "This program has no arguments" << endl;
@@ -25,16 +25,17 @@ int main(int argc, char **) {
     try
     {    
         boost::asio::io_service io_service;
-        json j_tmp = json::array();
+        json j_tmp;// = json::array();
         j_tmp.push_back(json::object_t::value_type(string("text"), tokens ));
         j_tmp.push_back(json::object_t::value_type(string("nbest"), 1 ));
         j_tmp.push_back(json::object_t::value_type(string("source"), string("fr") ));
         j_tmp.push_back(json::object_t::value_type(string("target"), string("en") ));
+        std::string s=j_tmp.dump();
         
 
         // Get a list of endpoints corresponding to the server name.
         tcp::resolver resolver(io_service);
-        tcp::resolver::query query(_address, "http");
+        tcp::resolver::query query(_address, "8888");
         tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
         // Try each endpoint until we successfully establish a connection.
@@ -46,13 +47,17 @@ int main(int argc, char **) {
         // allow us to treat all data up until the EOF as the content.
         boost::asio::streambuf request;
         std::ostream request_stream(&request);
-        request_stream << "POST /title/ HTTP/1.0\r\n";
+        request_stream << "POST /translation HTTP/1.0\r\n";
         request_stream << "Host: "<<_address<<"\r\n";
+//        request_stream << "Cache-Control: no-cache;\r\n";
+//        request_stream << "Authorization: customized-token; \r\n";
         request_stream << "Content-Type: application/json; charset=utf-8 \r\n";
         request_stream << "Accept: */*\r\n";
-    //     request_stream << "Content-Length: " << json.length() << "\r\n";    
+        request_stream << "Content-Length: " << s.size() << "\r\n";    
         request_stream << "Connection: close\r\n\r\n";
-        std::string s=j_tmp.dump();
+        cerr << s <<endl;
+	cerr << j_tmp.size() << endl;
+        cerr << s.size() << endl;
         request_stream << s;
 
         // Send the request.
@@ -77,18 +82,18 @@ int main(int argc, char **) {
 //           std::cout << "Invalid response\n";
 //           return 1;
 //         }
-        if (status_code != 200)
-        {
+//        if (status_code != 200)
+//        {
           std::cout << "Response returned with status code " << status_code << "\n";
-          return 1;
-        }
+//          return 1;
+//        }
 
         // Read the response headers, which are terminated by a blank line.
         boost::asio::read_until(socket, response, "\r\n\r\n");
 
         // Process the response headers.
         std::string header;
-        while (std::getline(response_stream, header) && header != "\r")
+        while (std::getline(response_stream, header))
           std::cout << header << "\n";
         std::cout << "\n";
 
