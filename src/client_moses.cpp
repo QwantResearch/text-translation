@@ -1,83 +1,111 @@
 // #include <cstdlib>
+#include <iostream>
+#include <cstdlib>
 #include <string>
 #include <iostream>
-
-#include <xmlrpc-c/girerr.hpp>
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/client_simple.hpp>
-#include <xmlrpc-c/xml.hpp>
+#include <istream>
+#include <ostream>
+#include <string>
+#include <boost/asio.hpp>
+#include <nlohmann/json.hpp>
 
 using namespace std;
+using namespace nlohmann;
+using namespace boost::asio::ip;
 
 int main(int argc, char **) {
 
+    string _address("localhost:8888/tranlation");
+    string tokens("Ceci est un test");
     if (argc-1 > 0) {
         cerr << "This program has no arguments" << endl;
         exit(1);
     }
 
-    try {
-        string const serverUrl("http://localhost:10010/RPC2");
-        xmlrpc_c::clientSimple myClient;
-        xmlrpc_c::value result;
-        xmlrpc_c::paramList myParamList;
-        string methodName;
-      const string init_value = "<value>";
-      const string end_value = "</value>";
-      const string init_struct = "<struct>";
-      const string end_struct = "</struct>";
-      const string init_member = "<member>";
-      const string end_member = "</member>";
-
-      string xml_body("<?xml version=\"1.0\" encoding=\"UTF-8\"?><methodCall>  <methodName>translate</methodName>  <params> <param>");
-      xml_body.append(init_value);
-      xml_body.append(init_struct);
-      xml_body.append(init_member);
-      xml_body.append("<name>text</name>");
-      xml_body.append(init_value);
-      xml_body.append("Ceci est un text");
-      xml_body.append(end_value);
-      xml_body.append(end_member);
-      xml_body.append(init_member);
-      xml_body.append("<name>report-all-factors</name>");
-      xml_body.append(init_value);
-      xml_body.append("true");
-      xml_body.append(end_value);
-      xml_body.append(end_member);
-      xml_body.append(init_member);
-      xml_body.append("<name>align</name>");
-      xml_body.append(init_value);
-      xml_body.append("false");
-      xml_body.append(end_value);
-      xml_body.append(end_member);
-      xml_body.append(end_struct);
-      xml_body.append(end_value);
-      xml_body.append("</param> </params></methodCall>");
-// int offset = 0;
-// int* offset_ptr = &offset;
-// translation_config.fromXml(xml_body,offset_ptr);
-// nh.setParam("/translation",translation_config);
-  
-    xmlrpc_c::xml::parseCall(xml_body, &methodName, &myParamList);
-//     methodName="translate";
-//     cerr << myParamList[0].type()<< endl;
-    cout << xml_body <<endl;
-    cout << "It is a call of method " << methodName << " with " << myParamList.size() << endl;
+    try
+    {    
+        boost::asio::io_service io_service;
+        json j_tmp = json::array();
+        j_tmp.push_back(json::object_t::value_type(string("text"), tokens ));
+        j_tmp.push_back(json::object_t::value_type(string("nbest"), 1 ));
+        j_tmp.push_back(json::object_t::value_type(string("source"), string("fr") ));
+        j_tmp.push_back(json::object_t::value_type(string("target"), string("en") ));
         
-        
-        myClient.call(serverUrl, methodName, &myParamList, &result);
-//         cerr << result <<endl;
 
-//         int const sum = xmlrpc_c::value_int(result);
-            // Assume the method returned an integer; throws error if not
+        // Get a list of endpoints corresponding to the server name.
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query(_address, "http");
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
-//         cout << "Result of RPC (sum of 5 and 7): " << sum << endl;
+        // Try each endpoint until we successfully establish a connection.
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
 
-    } catch (exception const& e) {
-        cerr << "Client threw error: " << e.what() << endl;
-    } catch (...) {
-        cerr << "Client threw unexpected error." << endl;
+        // Form the request. We specify the "Connection: close" header so that the
+        // server will close the socket after transmitting the response. This will
+        // allow us to treat all data up until the EOF as the content.
+        boost::asio::streambuf request;
+        std::ostream request_stream(&request);
+        request_stream << "POST /title/ HTTP/1.0\r\n";
+        request_stream << "Host: "<<_address<<"\r\n";
+        request_stream << "Content-Type: application/json; charset=utf-8 \r\n";
+        request_stream << "Accept: */*\r\n";
+    //     request_stream << "Content-Length: " << json.length() << "\r\n";    
+        request_stream << "Connection: close\r\n\r\n";
+        std::string s=j_tmp.dump();
+        request_stream << s;
+
+        // Send the request.
+        boost::asio::write(socket, request);
+
+        // Read the response status line. The response streambuf will automatically
+        // grow to accommodate the entire line. The growth may be limited by passing
+        // a maximum size to the streambuf constructor.
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n");
+
+        // Check that response is OK.
+        std::istream response_stream(&response);
+        std::string http_version;
+        response_stream >> http_version;
+        unsigned int status_code;
+        response_stream >> status_code;
+        std::string status_message;
+        std::getline(response_stream, status_message);
+//         if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+//         {
+//           std::cout << "Invalid response\n";
+//           return 1;
+//         }
+        if (status_code != 200)
+        {
+          std::cout << "Response returned with status code " << status_code << "\n";
+          return 1;
+        }
+
+        // Read the response headers, which are terminated by a blank line.
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        // Process the response headers.
+        std::string header;
+        while (std::getline(response_stream, header) && header != "\r")
+          std::cout << header << "\n";
+        std::cout << "\n";
+
+        // Write whatever content we already have to output.
+        if (response.size() > 0)
+          std::cout << &response;
+
+        // Read until EOF, writing data to output as we go.
+        boost::system::error_code error;
+        while (boost::asio::read(socket, response,
+              boost::asio::transfer_at_least(1), error))
+          std::cout << &response;
+        if (error != boost::asio::error::eof)
+          throw boost::system::system_error(error);
     }
-
-    return 0;
+    catch (std::exception& e)
+    {
+        std::cout << "Exception: " << e.what() << "\n";
+    }
 }

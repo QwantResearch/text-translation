@@ -2,6 +2,7 @@
 
 using namespace std;
 using namespace nlohmann;
+using namespace boost::asio::ip;
 
 bool qsmt::getLocal()
 {
@@ -33,9 +34,9 @@ bool qsmt::SMTBatch(string tokens, vector< string >& output_batch_tokens, vector
         
 
         // Get a list of endpoints corresponding to the server name.
-        tcp::resolver resolver(io_service);
-        tcp::resolver::query query(_address, "http");
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        boost::asio::ip::tcp::resolver resolver(io_service);
+        boost::asio::ip::tcp::resolver::query query(_address, "http");
+        boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
         // Try each endpoint until we successfully establish a connection.
         tcp::socket socket(io_service);
