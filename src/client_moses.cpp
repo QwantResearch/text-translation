@@ -16,7 +16,7 @@ using namespace boost::asio::ip;
 int main(int argc, char **) {
 
     string _address("localhost");
-    string tokens("Ceci est un test");
+    string tokens("This is a test !");
     if (argc-1 > 0) {
         cerr << "This program has no arguments" << endl;
         exit(1);
@@ -67,7 +67,7 @@ int main(int argc, char **) {
         // grow to accommodate the entire line. The growth may be limited by passing
         // a maximum size to the streambuf constructor.
         boost::asio::streambuf response;
-        boost::asio::read_until(socket, response, "\r\n");
+//        boost::asio::read_until(socket, response, "\r\n");
 
         // Check that response is OK.
         std::istream response_stream(&response);
@@ -84,30 +84,43 @@ int main(int argc, char **) {
 //         }
 //        if (status_code != 200)
 //        {
-          std::cout << "Response returned with status code " << status_code << "\n";
+//          std::cout << "Response returned with status code " << status_code << "\n";
 //          return 1;
 //        }
 
         // Read the response headers, which are terminated by a blank line.
-        boost::asio::read_until(socket, response, "\r\n\r\n");
+//        boost::asio::read_until(socket, response, "\r\n\r\n");
 
         // Process the response headers.
-        std::string header;
-        while (std::getline(response_stream, header))
-          std::cout << header << "\n";
-        std::cout << "\n";
+//        std::string header;
+//        while (std::getline(response_stream, header))
+//          std::cout << header << "\n";
+//        std::cout << "\n";
+//	std::cout << "END HEADERS" << endl;
 
         // Write whatever content we already have to output.
-        if (response.size() > 0)
-          std::cout << &response;
+        stringstream ss;
+//        if (response.size() > 0)
+//        	cout << ss.str();
+//          std::cout << &response;
+//	std::cout << "END RESPONSE" << endl;
 
         // Read until EOF, writing data to output as we go.
+
         boost::system::error_code error;
-        while (boost::asio::read(socket, response,
-              boost::asio::transfer_at_least(1), error))
-          std::cout << &response;
+        while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
+		ss << &response;
+ //         std::cout << &response;
+	string sstr=ss.str();
+//	cout << ss.str()<< endl;
+        cout << sstr.substr(sstr.find("{"),sstr.find("{")-sstr.rfind("}"));
+	cout << endl;
+	std::cout << "END RESPONSE 2" << endl;
         if (error != boost::asio::error::eof)
           throw boost::system::system_error(error);
+        else
+          cerr << "end of stream" <<endl;
+	socket.close();
     }
     catch (std::exception& e)
     {
