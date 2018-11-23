@@ -113,7 +113,7 @@ bool qsmt::SMTBatch(std::string& tokens, std::string& output_tokens, float& outp
             l_res=j_resp["result"]; 
             if (l_res.find("text") != l_res.end())
             {
-                string tmp=j_resp["text"].dump();
+                string tmp=l_res["text"].dump();
                 output_tokens=tmp.substr(1,(int)tmp.size()-2);
                 output_scores=1.0;
             }
@@ -146,7 +146,7 @@ bool qsmt::NMTBatchSMT(vector< vector< string > > batch_tokens, vector< vector< 
       loutput="";
       vloutput.clear();
       lscores=0.0;
-//       _qsmt->SMTBatch(linput,loutput,lscores);
+      SMTBatch(linput,loutput,lscores);
       output_batch_scores.push_back(lscores);
       Split(loutput,vloutput," ");
       output_batch_tokens.push_back(vloutput);

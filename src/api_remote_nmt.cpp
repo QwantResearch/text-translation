@@ -131,9 +131,13 @@ public:
         else if (local == 3)
         {
                 std::string lhost=dirname.substr(0,dirname.find("/"));
-                std::string lroute=dirname.substr(dirname.find("/"),(int)dirname.size()-dirname.find("/"));
-                std::string lport=lhost.substr(lhost.find(":"),((int)lhost.size())-lhost.find(":"));
+                std::string lroute=dirname.substr((int)dirname.find("/")+1,(int)dirname.size()-dirname.find("/"));
+                std::string lport=lhost.substr((int)lhost.find(":")+1,((int)lhost.size())-lhost.find(":"));
                 lhost=lhost.substr(0,lhost.find(":"));
+                cerr << "Host: |" << lhost << "|" << endl;
+                cerr << "Port: |" << lport << "|" << endl;
+                cerr << "Route: |" << lroute << "|" << endl;
+                cerr << "Domain: |" << dirname << "|" <<endl;
                 
                 _modelsmt.setqsmt(lhost,lport, lroute, dirname);
                 cerr << "SMT is set" <<endl;
@@ -186,7 +190,7 @@ public:
 
 //        to_translate.push_back(to_process);
         if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
-        if (_local == 3) return _model.NMTBatch(to_translate,output,scores_result_batched);
+        if (_local == 3) return _modelsmt.NMTBatchSMT(to_translate,output,scores_result_batched);
         return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
     }
     std::string getDomain()
@@ -213,6 +217,8 @@ public:
         while (getline(model_config,line))
         {
             vector<string> vec_line;
+            if ((int)line.find("#") != 0)
+            {
             Split(line,vec_line,"\t");
             string src=vec_line.at(0);
             string tgt=vec_line.at(1);
@@ -221,6 +227,7 @@ public:
             string domain=vec_line.at(4);
             int local=atoi(vec_line.at(5).c_str());
             _list_nmt.push_back(new NMT(file,domain,src,tgt,bpe,local));
+            }
         }
         model_config.close();
         
