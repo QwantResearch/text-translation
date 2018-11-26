@@ -92,35 +92,33 @@ void qtokenizer::set_tokenizer(string &lang, bool lowercase)
 vector<string> qtokenizer::tokenize(string &input)
 {
     vector<string> to_return;
-    string to_tokenize=input.replace(input.find("’"),3,"'");
     if (_lang == "fr")
     {
-        to_return=_fr_tokenizer->tokenize_sentence(to_tokenize);
+        to_return=_fr_tokenizer->tokenize_sentence(input);
     }
     else if (_lang == "en")
     {
-        to_return=_en_tokenizer->tokenize_sentence(to_tokenize);
+        to_return=_en_tokenizer->tokenize_sentence(input);
     }
     else
     {
-        to_return=_tokenizer->tokenize_sentence(to_tokenize);
+        to_return=_tokenizer->tokenize_sentence(input);
     }
     return to_return;
 }
 string qtokenizer::tokenize_str(string &input)
 {
-    string to_tokenize=input.replace(input.find("’"),3,"'");
     if (_lang == "fr")
     {
-        return _fr_tokenizer->tokenize_sentence_to_string(to_tokenize);
+        return _fr_tokenizer->tokenize_sentence_to_string(input);
     }
     else if (_lang == "en")
     {
-        return _en_tokenizer->tokenize_sentence_to_string(to_tokenize);
+        return _en_tokenizer->tokenize_sentence_to_string(input);
     }
     else
     {
-        return _tokenizer->tokenize_sentence_to_string(to_tokenize);
+        return _tokenizer->tokenize_sentence_to_string(input);
     }
 }
 
