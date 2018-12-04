@@ -35,7 +35,7 @@ set(TF_SERVING_DIR ${PROJECT_SOURCE_DIR}/../serving/)
 include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/ ${TF_SERVING_DIR} ${TF_SERVING_DIR}/bazel-genfiles /usr/local/include)
 link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib /usr/local/lib ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/model_servers/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/apis/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/util/ /usr/lib /usr/local/lib)
 
-set(CMAKE_CXX_FLAGS " $CMAKE_CXX_FLAGS -O2 -std=c++11 -lpthread -fpermissive ")
+set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive ")
 
 # set(NMT_EXECUTABLE_API api_nmt_local)
 # set(NMT_SOURCE_API 
