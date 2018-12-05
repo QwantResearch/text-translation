@@ -67,8 +67,8 @@ set(TEST_CLIENT_SRC
 # add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
 add_executable(${TEST_CLIENT} ${TEST_CLIENT_SRC})
 
-# target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
-target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex boost_system boost_thread pthread)
+# target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
+target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex boost_system boost_thread pthread)
 
 target_link_libraries(${TEST_CLIENT} boost_system boost_thread pthread)
 
