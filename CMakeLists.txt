@@ -35,7 +35,7 @@ set(TF_SERVING_DIR ${PROJECT_SOURCE_DIR}/../serving/)
 include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/ ${TF_SERVING_DIR} ${TF_SERVING_DIR}/bazel-genfiles /usr/local/include)
 link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib /usr/local/lib ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/model_servers/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/apis/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/util/ /usr/lib /usr/local/lib)
 
-set(CMAKE_CXX_FLAGS "-O2 -std=c++11 -lpthread -fpermissive ")
+set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive ")
 
 # set(NMT_EXECUTABLE_API api_nmt_local)
 # set(NMT_SOURCE_API 
@@ -67,8 +67,8 @@ set(TEST_CLIENT_SRC
 # add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
 add_executable(${TEST_CLIENT} ${TEST_CLIENT_SRC})
 
-# target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
-target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp http_rest_prediction_handler predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex boost_system boost_thread pthread)
+# target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
+target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex boost_system boost_thread pthread)
 
 target_link_libraries(${TEST_CLIENT} boost_system boost_thread pthread)
 
