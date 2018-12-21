@@ -208,11 +208,12 @@ private:
 
 class StatsEndpoint {
 public:
-    StatsEndpoint(Address addr, string NMT_config)
+    StatsEndpoint(Address addr, string NMT_config, int debugmode)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     { 
         ifstream model_config;
         string line;
+        _debugmode=debugmode;
         model_config.open(NMT_config);
         while (getline(model_config,line))
         {
@@ -258,6 +259,7 @@ public:
 private:
     vector<Classifier*> _list_classifs;
     vector<NMT*> _list_nmt;
+    int _debugmode;
     
     void setupRoutes() {
         using namespace Rest;
@@ -293,7 +295,10 @@ private:
             response_str.append("\"");
         }
         response_str.append("]}");
-        cerr << "LOG: "<< currentDateTime() << "\t" << response_str << endl;
+        if (_debugmode > 0)
+        {
+            cerr << "LOG: "<< currentDateTime() << "\t" << response_str << endl;
+        }
         response.send(Pistache::Http::Code::Ok, response_str);
     }
     
@@ -415,7 +420,10 @@ private:
         nlohmann::json j = nlohmann::json::parse(request.body());
         int count=10;
         bool debugmode = false;
-        cerr << "LOG [ASK]: "<< currentDateTime() << "\t" << request.body() << endl;
+        if (_debugmode > 0)
+        {
+            cerr << "LOG [ASK]: "<< currentDateTime() << "\t" << request.body() << endl;
+        }
         
         if (j.find("source") == j.end())
         {
@@ -484,7 +492,10 @@ private:
         }
         std::string s=j.dump();
         response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-        cerr << "LOG [RES]: "<< currentDateTime() << "\t" << s << endl;
+        if (_debugmode > 0)
+        {
+            cerr << "LOG [RES]: "<< currentDateTime() << "\t" << s << endl;
+        }
         response.send(Http::Code::Ok, std::string(s));
     }
     void writeLog(string text_to_log)
@@ -514,6 +525,7 @@ int main(int argc, char *argv[]) {
     int thr = 8;
 
     string model_config_NMT("model_nmt_config.txt");
+    int debugmode=0; //0 = no log ; 1 = info ; 2 = full logs
     if (argc >= 2) 
     {
         port = std::stol(argv[1]);
@@ -523,6 +535,10 @@ int main(int argc, char *argv[]) {
             if (argc >= 4)
             {
                 model_config_NMT = string(argv[3]);
+                if (argc >= 5)
+                {
+                    debugmode = std::atoi(argv[4]);
+                }
             }
         }
     }
@@ -533,7 +549,7 @@ int main(int argc, char *argv[]) {
     cout << "Using " << thr << " threads" << endl;
     
 
-    StatsEndpoint stats(addr,model_config_NMT);
+    StatsEndpoint stats(addr,model_config_NMT,debugmode);
 
     stats.init(thr);
     stats.start();
