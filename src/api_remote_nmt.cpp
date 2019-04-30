@@ -255,6 +255,10 @@ public:
     {
         return _domain;
     }
+    bool get_is_spm_model()
+    {
+        return _spm_model;
+    }
 
 
 private:
@@ -458,6 +462,11 @@ private:
 //      	       translation_scores_vec.push_back(atof(result_batched.at(i).at(j).c_str()));
 	       	     	translation_concat.clear();
 	        }
+	        if ((*it_nmt)->get_is_spm_model) 
+                {
+                    translation_concat=translation_concat.replace(" ","");
+                    translation_concat=translation_concat.replace("▁"," ");
+                }
 	}
 	else
 	{
