@@ -37,6 +37,7 @@
 #include "qnmt.h"
 #include "utils.h"
 #include "bpe.h"
+#include "spm.h"
 #include <qsmt.h>
 
 using namespace std;
@@ -75,35 +76,35 @@ const std::string currentDateTime() {
 }
 
 
-class Classifier {
-public:
-    Classifier(std::string filename, string domain)
-    {
-        _model.loadModel(filename.c_str());
-        _domain = domain;
-    }
-    
-    vector < pair < fasttext::real, string > > prediction(string text, int count)
-    {
-        vector <pair <fasttext::real, string> > results;
-        istringstream istr(text);
-        _model.predict(istr,count,results);
-        for (int i=0;i<(int)results.size();i++)
-        {
-            results.at(i).first=exp(results.at(i).first);
-            results.at(i).second=results.at(i).second.substr(9);
-        }
-        return results;
-    }
-    std::string getDomain()
-    {
-        return _domain;
-    }
-
-private:
-    std::string _domain;
-    fasttext::FastText _model;
-};
+// class Classifier {
+// public:
+//     Classifier(std::string filename, string domain)
+//     {
+//         _model.loadModel(filename.c_str());
+//         _domain = domain;
+//     }
+//     
+//     vector < pair < fasttext::real, string > > prediction(string text, int count)
+//     {
+//         vector <pair <fasttext::real, string> > results;
+//         istringstream istr(text);
+//         _model.predict(istr,count,results);
+//         for (int i=0;i<(int)results.size();i++)
+//         {
+//             results.at(i).first=exp(results.at(i).first);
+//             results.at(i).second=results.at(i).second.substr(9);
+//         }
+//         return results;
+//     }
+//     std::string getDomain()
+//     {
+//         return _domain;
+//     }
+// 
+// private:
+//     std::string _domain;
+//     fasttext::FastText _model;
+// };
   
 class NMT {
 public:
@@ -145,7 +146,16 @@ public:
         else _model.LoadModel(string(src+"-"+tgt+"-"+domain), grpc::CreateChannel(dirname,grpc::InsecureChannelCredentials()));
         cerr << "*************************************" <<endl;
         _domain = domain;
-        _bpe = new BPE(bpe);
+        _spm_model = false;
+        if ((int)bpe.find("spm") > -1)
+        {
+            _spm= new spm(bpe);
+            _spm_model = true;
+        }
+        else
+        {
+            _bpe = new BPE(bpe);
+        }
         _src=src;
         _tgt=tgt;
         _local=local;
@@ -164,7 +174,8 @@ public:
         vector<string> to_process ;
         if (_local != 3)
         {
-            to_process = _bpe->Segment(input);
+            if (_spm_model) to_process=_spm->segment(input);
+            else to_process = _bpe->Segment(input);
         }
         else
         {
@@ -203,6 +214,8 @@ private:
     qnmt _model;
     qsmt _modelsmt;
     BPE* _bpe;
+    spm* _spm;
+    bool _spm_model;
 };
 
 
@@ -257,7 +270,7 @@ public:
     
 
 private:
-    vector<Classifier*> _list_classifs;
+//     vector<Classifier*> _list_classifs;
     vector<NMT*> _list_nmt;
     int _debugmode;
     
@@ -302,20 +315,20 @@ private:
         response.send(Pistache::Http::Code::Ok, response_str);
     }
     
-    std::vector < std::pair < fasttext::real, std::string > > askClassification(std::string text, std::string domain, int count)
-    {
-        std::vector < std::pair < fasttext::real, std::string > > to_return;
-        istringstream istr(text);
-        auto it_classif = std::find_if(_list_classifs.begin(), _list_classifs.end(), [&](Classifier* l_classif) 
-        {
-            return l_classif->getDomain() == domain;
-        }); 
-        if (it_classif != _list_classifs.end())
-        {
-            to_return = (*it_classif)->prediction(text,count);
-        }
-        return to_return;
-    }
+//     std::vector < std::pair < fasttext::real, std::string > > askClassification(std::string text, std::string domain, int count)
+//     {
+//         std::vector < std::pair < fasttext::real, std::string > > to_return;
+//         istringstream istr(text);
+//         auto it_classif = std::find_if(_list_classifs.begin(), _list_classifs.end(), [&](Classifier* l_classif) 
+//         {
+//             return l_classif->getDomain() == domain;
+//         }); 
+//         if (it_classif != _list_classifs.end())
+//         {
+//             to_return = (*it_classif)->prediction(text,count);
+//         }
+//         return to_return;
+//     }
 //     bool askNMT(vector<vector<string> > &input, json &output, string &domain, string &src, string &tgt, bool debugmode)
 //     {
 //         vector<vector<string> > result_batched ;
