@@ -449,7 +449,11 @@ private:
        	         		json j_tmp;
        	         		curr_token=result_batched.at(i).at(j);
 //     	            cerr << "output: " << curr_token << endl;
-       	         		if (translation_concat.length() > 0) translation_concat.append(" ");
+       	         		if (translation_concat.length() > 0) 
+                                {
+                                    if ((*it_nmt)->get_is_spm_model()) translation_concat.append("");
+                                    else translation_concat.append(" ");
+                                }
        	         		translation_concat.append(curr_token);
        	     		}
        	     		int sep_pos = (int)translation_concat.find("@@");
@@ -462,10 +466,9 @@ private:
 //      	       translation_scores_vec.push_back(atof(result_batched.at(i).at(j).c_str()));
 	       	     	translation_concat.clear();
 	        }
-	        if ((*it_nmt)->get_is_spm_model) 
+	        if ((*it_nmt)->get_is_spm_model()) 
                 {
-                    translation_concat=translation_concat.replace(" ","");
-                    translation_concat=translation_concat.replace("▁"," ");
+                    translation_concat.replace(translation_concat.begin(), translation_concat.end(), "▁", " ");
                 }
 	}
 	else
