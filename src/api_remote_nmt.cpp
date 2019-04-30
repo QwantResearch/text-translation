@@ -189,7 +189,7 @@ public:
 	{
                 to_process_tmp.push_back(to_process[i]);
 //   		cerr << to_process[i] << endl;
-		if (((i > 0) && (i<(int)to_process.size() - 1) && (int)to_process[i].find(".") == 0 ) || i == (int)to_process.size()-1)
+		if (((i > 0) && (i<(int)to_process.size() - 1) && ((int)to_process[i].find(".") == 0  || (int)to_process[i].find("?") == 0  || (int)to_process[i].find("!") == 0  || (int)to_process[i].find("▁.") == 0  || (int)to_process[i].find("▁!") == 0  || (int)to_process[i].find("▁?") == 0  || (int)to_process[i].find("▁;") == 0 )) || i == (int)to_process.size()-1)
                 {
                        
                        to_translate.push_back(to_process_tmp);
@@ -213,6 +213,8 @@ public:
             translation_result.clear();
             scores_result.clear();
             to_translate_sentence.push_back(to_translate.at(i));
+            for (int k=0; k<(int)to_translate.at(i).size(); k++) cerr << to_translate.at(i).at(k) ;
+            cerr << endl;
             switch(_local)
             {
               case 1:
