@@ -468,7 +468,7 @@ private:
 	        }
 	        if ((*it_nmt)->get_is_spm_model()) 
                 {
-                    translation_concat.replace(translation_concat.begin(), translation_concat.end(), "▁", " ");
+                    translation_concat = FindAndReplace(translation_concat, "▁", " ");
                 }
 	}
 	else
