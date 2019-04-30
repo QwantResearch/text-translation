@@ -57,3 +57,15 @@ std::string EscapeRegex(std::string text) {
   return result.str();
 }
 
+
+std::string FindAndReplace(std::string text, const std::string to_replace_from, const std::string to_replace_with) 
+{
+    size_t start_pos = 0;
+    while((start_pos = text.find(to_replace_from, start_pos)) != std::string::npos) 
+    {
+        text.replace(start_pos, to_replace_from.length(), to_replace_with);
+        start_pos += to_replace_with.length();
+    }
+    return text;
+}
+
