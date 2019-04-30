@@ -26,8 +26,8 @@
 
 spm::spm(std::string& modelpath)
 {
-    const auto status = _processor.Load(modelpath);
-    if (!status) 
+    const sentencepiece::util::Status status = _processor.Load(modelpath);
+    if (!status.ok()) 
     {      
         std::cerr << "Error while loading SentencePiece model: " << modelpath << std::endl;
         exit(1);
