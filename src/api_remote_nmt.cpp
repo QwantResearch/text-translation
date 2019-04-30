@@ -197,12 +197,62 @@ public:
                 }
 // 		cerr << to_process.at(i)<<endl;
 	}
-//        vector<vector<string> > to_translate;
+	if ((int)to_process_tmp.size() > 0)
+        {
+            to_translate.push_back(to_process_tmp);
+            to_process_tmp.clear();
+        }
+       vector<vector<string> > to_translate_sentence;
+       vector<vector<string> > translation_result;
+       vector<float> scores_result;
 
 //        to_translate.push_back(to_process);
-        if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
-        if (_local == 3) return _modelsmt.NMTBatchSMT(to_translate,output,scores_result_batched);
-        return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
+        for (int i=0; (int)i<(int)to_translate.size() ; i++)
+        {
+            to_translate_sentence.clear();
+            translation_result.clear();
+            scores_result.clear();
+            to_translate_sentence.push_back(to_translate.at(i));
+            switch(_local)
+            {
+              case 1:
+                if (! _model.NMTBatch(to_translate_sentence,translation_result,scores_result)) return false;
+                break;
+              case 3:
+                if (! _modelsmt.NMTBatchSMT(to_translate_sentence,translation_result,scores_result)) return false;
+                break;
+              default:
+                if (! _model.NMTBatchOnline(to_translate_sentence,translation_result,scores_result)) return false;
+                break;
+            }
+            
+            
+            for (int j=0; j<(int)translation_result.size(); j++)
+            {
+                if (i == 0) 
+                {
+                    output.push_back(translation_result.at(j));
+                    scores_result_batched.push_back(scores_result.at(i));
+                }
+                else
+                {
+                    for (int k=0; k<(int)translation_result.at(j).size(); j++)
+                    {
+                        output.at(j).push_back(translation_result.at(j).at(k));
+                    }
+                    scores_result_batched.at(j)=scores_result_batched.at(j)+scores_result.at(j);
+                }
+            }
+            
+//             if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
+//             if (_local == 3) return _modelsmt.NMTBatchSMT(to_translate,output,scores_result_batched);
+//             return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
+            
+        }
+        return true;
+//         if (_local == 1) return _model.NMTBatch(to_translate,output,scores_result_batched);
+//         if (_local == 3) return _modelsmt.NMTBatchSMT(to_translate,output,scores_result_batched);
+//         return _model.NMTBatchOnline(to_translate,output,scores_result_batched);
     }
     std::string getDomain()
     {

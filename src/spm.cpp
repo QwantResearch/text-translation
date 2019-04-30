@@ -38,4 +38,5 @@ std::vector< std::string > spm::segment(std::string& sentence)
 {
     std::vector<std::string> to_return;
     _processor.Encode(sentence, &to_return);
+    return to_return;
 }
