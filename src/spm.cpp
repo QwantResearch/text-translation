@@ -51,5 +51,9 @@ std::string spm::decode(std::vector<std::string>& vec_sentence)
     {
         to_return=to_return.replace((int)to_return.find(specialChar),(int)strlen(specialChar)," ");
     }
+    if (to_return[0]==' ')
+    {
+        to_return=to_return.substr(1,(int)to_return.length()-1);
+    }
     return to_return;
 }
