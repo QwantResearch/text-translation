@@ -41,6 +41,7 @@ class spm {
   public:
     spm(std::string& modelpath);
     std::vector<std::string> segment(std::string& sentence);
+    std::string decode(std::vector<std::string> & sentence);
     
     
   private:

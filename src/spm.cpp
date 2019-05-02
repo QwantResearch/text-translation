@@ -40,3 +40,10 @@ std::vector< std::string > spm::segment(std::string& sentence)
     _processor.Encode(sentence, &to_return);
     return to_return;
 }
+
+std::string spm::decode(std::vector<std::string>& vec_sentence)
+{
+    std::string to_return;
+    _processor.Decode(vec_sentence, &to_return);
+    return to_return;
+}
