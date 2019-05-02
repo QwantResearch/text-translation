@@ -24,6 +24,7 @@
 ***************************************************************************/
 #include "spm.h"
 
+
 spm::spm(std::string& modelpath)
 {
     const sentencepiece::util::Status status = _processor.Load(modelpath);
@@ -44,6 +45,8 @@ std::vector< std::string > spm::segment(std::string& sentence)
 std::string spm::decode(std::vector<std::string>& vec_sentence)
 {
     std::string to_return;
+    const char specialChar[] = "\xe2\x96\x81";
     _processor.Decode(vec_sentence, &to_return);
+    to_return=to_return.replace(to_return.begin(),to_return.end(),specialChar," ");
     return to_return;
 }
