@@ -49,7 +49,7 @@ std::string spm::decode(std::vector<std::string>& vec_sentence)
     _processor.Decode(vec_sentence, &to_return);
     while((int)to_return.find(specialChar)>-1)
     {
-        to_return=to_return.replace((int)to_return.find(specialChar),(int)to_return.find(specialChar)+(int)strlen(specialChar)," ");
+        to_return=to_return.replace((int)to_return.find(specialChar),(int)strlen(specialChar)," ");
     }
     return to_return;
 }
