@@ -29,7 +29,7 @@ spm::spm(std::string& modelpath)
 {
     const sentencepiece::util::Status status = _processor.Load(modelpath);
     if (!status.ok()) 
-    {      
+    {
         std::cerr << "Error while loading SentencePiece model: " << modelpath << std::endl;
         exit(1);
     }
@@ -47,6 +47,9 @@ std::string spm::decode(std::vector<std::string>& vec_sentence)
     std::string to_return;
     const char specialChar[] = "\xe2\x96\x81";
     _processor.Decode(vec_sentence, &to_return);
-    to_return=to_return.replace(to_return.begin(),to_return.end(),specialChar," ");
+    while((int)to_return.find(specialChar)>-1)
+    {
+        to_return=to_return.replace((int)to_return.find(specialChar),(int)to_return.find(specialChar)+(int)strlen(specialChar)," ");
+    }
     return to_return;
 }
