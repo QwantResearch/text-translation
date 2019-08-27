@@ -22,7 +22,7 @@ class nmt
         nmt();
         nmt(std::string model_name_param, std::string& address_server);
         bool LoadModel(std::string model_name_param, std::string& address_server);
-        bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::string > translation_output, std::vector< float >& output_translation_scores, std::vector< std::vector< std::string > >& output_alignement_scores);
+        bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::vector< std::string > > translation_output, std::vector< float >& output_translation_scores, std::vector< std::vector< std::string > >& output_alignement_scores);
         bool getLocal();
     private:
       bool _local;

@@ -42,7 +42,7 @@ set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive "
 # set(NMT_EXECUTABLE_API api_nmt_local)
 # set(NMT_SOURCE_API 
 #   ${PROJECT_SOURCE_DIR}/src/api_local_nmt.cpp 
-#   ${PROJECT_SOURCE_DIR}/src/tokenizer.cpp 
+#   ${PROJECT_SOURCE_DIR}/src/qtokenizer.cpp 
 #   ${PROJECT_SOURCE_DIR}/src/qnmt.cpp 
 #   ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
 #   ${PROJECT_SOURCE_DIR}/src/utils.cpp
@@ -52,9 +52,10 @@ set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive "
 set(NMT_REMOTE_API text-translate)
 set(NMT_SOURCE_REMOTE_API 
   ${PROJECT_SOURCE_DIR}/src/text-translate.cpp 
+  ${PROJECT_SOURCE_DIR}/src/rest_server.cpp 
   ${PROJECT_SOURCE_DIR}/src/tokenizer.cpp 
-  ${PROJECT_SOURCE_DIR}/src/qnmt.cpp 
-  ${PROJECT_SOURCE_DIR}/src/qsmt.cpp 
+  ${PROJECT_SOURCE_DIR}/src/nmt.cpp 
+  ${PROJECT_SOURCE_DIR}/src/smt.cpp 
   ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
   ${PROJECT_SOURCE_DIR}/src/spm.cpp 
   ${PROJECT_SOURCE_DIR}/src/utils.cpp
@@ -77,7 +78,7 @@ add_executable(${TEST_CLIENT} ${TEST_CLIENT_SRC})
 add_executable(${TEST_CLIENT_MARIAN} ${TEST_CLIENT_MARIAN_SRC})
 
 # target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
-target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex boost_system boost_thread pthread sentencepiece)
+target_link_libraries(${NMT_REMOTE_API} pistache pthread qnlp fasttext boost_regex boost_system boost_thread pthread sentencepiece)
 
 target_link_libraries(${TEST_CLIENT} boost_system boost_thread pthread)
 target_link_libraries(${TEST_CLIENT_MARIAN} boost_system boost_thread pthread easywsclient)

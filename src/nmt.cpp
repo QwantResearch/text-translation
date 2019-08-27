@@ -137,7 +137,7 @@ bool nmt::LoadModel(std::string model_name_param, std::string& address_server)
 }
 
 
-bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::string > translation_output, std::vector< float >& output_translation_scores, std::vector< std::vector< std::string > >& output_alignement_scores)
+bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::vector< std::string > > translation_output, std::vector< float >& output_translation_scores, std::vector< std::vector< std::string > >& output_alignement_scores)
 {
     std::unique_ptr<WebSocket> ws(WebSocket::from_url(_address));
     assert(ws);
