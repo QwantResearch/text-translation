@@ -19,7 +19,7 @@ pushd vendor/qnlp-toolkit
 	bash install.sh $PREFIX
 popd
  
-for dep in pistache json
+for dep in pistache json sentencepiece easywsclient
 do
 pushd vendor/$dep
 	rm -rf build
