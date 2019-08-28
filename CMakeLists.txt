@@ -69,3 +69,4 @@ target_link_libraries(${NMT_REMOTE_API}
 target_link_libraries(${TEST_CLIENT} boost_system boost_thread pthread)
 target_link_libraries(${TEST_CLIENT_MARIAN} boost_system boost_thread pthread easywsclient)
 
+install(TARGETS ${PROJECT_NAME} DESTINATION bin/)
