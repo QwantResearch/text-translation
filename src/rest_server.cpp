@@ -24,12 +24,14 @@ rest_server::rest_server(std::string &config_file, int &threads, int debug)
         {
             std::string domain=modelnode.first.as<std::string>();
             YAML::Node modelinfos = modelnode.second;
-            std::string nmt_model_filename=modelinfos["nmt_model"].as<std::string>();
-            std::string lang=modelinfos["language"].as<std::string>();
+            std::string nmt_model_end_point="ws://"+modelinfos["nmt_model_address"].as<std::string>()+":"+modelinfos["nmt_model_port"].as<std::string>()+"/translate";
+            std::string spm_model_filename=modelinfos["spm_model"].as<std::string>();
+            std::string lang_src=modelinfos["source_language"].as<std::string>();
+            std::string lang_tgt=modelinfos["target_language"].as<std::string>();
             try 
             {
-//                 shared_ptr<Channel> channel = CreateChannel(nmt_model_filename,grpc::InsecureChannelCredentials());
-                nmt* nmt_pointer = new nmt(nmt_model_filename, domain, lang);
+//                 shared_ptr<Channel> channel = CreateChannel(nmt_model_end_point,grpc::InsecureChannelCredentials());
+                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, lang_src,lang_tgt);
                 _list_translation_model.push_back(nmt_pointer);
                 cout << "\t===> loaded" << endl;
             } 
@@ -127,9 +129,10 @@ void rest_server::doTranslationPost(const Rest::Request &request,
   float threshold;
   bool debugmode;
   string domain;
-  string lang;  
+  string lang_src;  
+  string lang_tgt;  
   try {
-    rest_server::fetchParamWithDefault(j, domain, lang, count, threshold, debugmode);
+    rest_server::fetchParamWithDefault(j, domain, lang_src, lang_tgt, count, threshold, debugmode);
   } catch (std::runtime_error e) {
     response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
     response.send(Http::Code::Bad_Request, e.what());
@@ -141,7 +144,7 @@ void rest_server::doTranslationPost(const Rest::Request &request,
     string tokenized;
     if (_debug_mode != 0)
       cerr << "[DEBUG]\t" << currentDateTime() << "\t" << "ASK TRANSLATION:\t" << j << endl;
-    askTranslate(text, tokenized, j, domain, lang, debugmode);
+    askTranslation(text, tokenized, j, domain, lang_src, lang_tgt, debugmode);
     j.push_back(nlohmann::json::object_t::value_type(string("tokenized"), tokenized));
 
     std::string s = j.dump();
@@ -168,10 +171,11 @@ void rest_server::doTranslationBatchPost(const Rest::Request &request,
   float threshold;
   bool debugmode;
   string domain;
-  string lang;
+  string lang_src;
+  string lang_tgt;
   
   try {
-    rest_server::fetchParamWithDefault(j, domain, lang, count, threshold, debugmode);
+    rest_server::fetchParamWithDefault(j, domain, lang_src, lang_tgt, count, threshold, debugmode);
   } catch (std::runtime_error e) {
     response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
     response.send(Http::Code::Bad_Request, e.what());
@@ -184,7 +188,7 @@ void rest_server::doTranslationBatchPost(const Rest::Request &request,
         string tokenized;
         if (_debug_mode != 0)
           cerr << "[DEBUG]\t" << currentDateTime() << "\tASK TRANSLATION:\t" << it << endl;
-        askTranslate(text, tokenized, it, domain, lang, debugmode);
+        askTranslation(text, tokenized, it, domain, lang_src, lang_tgt, debugmode);
         it.push_back(nlohmann::json::object_t::value_type(string("tokenized"), tokenized));
       }
       else 
@@ -210,7 +214,7 @@ void rest_server::doTranslationBatchPost(const Rest::Request &request,
 
 
 void rest_server::fetchParamWithDefault(const nlohmann::json& j, 
-                            string& domain, string& lang, 
+                            string& domain, string& lang_src, string& lang_tgt, 
                             int& count,
                             float& threshold,
                             bool& debugmode){
@@ -220,11 +224,20 @@ void rest_server::fetchParamWithDefault(const nlohmann::json& j,
 
   if (j.find("count") != j.end()) {
     count = j["count"];
-  }
-  if (j.find("lang") != j.end()) {
-    lang = j["lang"];
+  }            
+//   string src=j["source"]; 
+//             
+//   string tgt=j["target"]; 
+
+  if (j.find("source") != j.end()) {
+    lang_src = j["source"];
   } else {
-    throw std::runtime_error("`lang` value is null");
+    throw std::runtime_error("`source` value is null");
+  }
+  if (j.find("source") != j.end()) {
+    lang_tgt = j["target"];
+  } else {
+    throw std::runtime_error("`target` value is null");
   }
   if (j.find("threshold") != j.end()) {
     threshold = j["threshold"];
@@ -239,115 +252,87 @@ void rest_server::fetchParamWithDefault(const nlohmann::json& j,
   }
 }
 
-bool rest_server::askTranslate(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang, bool debugmode)
+bool rest_server::askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode)
 {
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
     {
-        return (l_nmt->getDomain() == domain && l_nmt->getLang() == lang);
+        return (l_nmt->getDomain() == domain && l_nmt->getLangSrc() == lang_src && l_nmt->getLangTgt() == lang_tgt);
     }); 
     if (it_translation == _list_translation_model.end())
     {
-        cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain` value is not valid ("+domain+") for TRANSLATION" << endl;
+        cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain+lang_src+lang_tgt` values are not valid ("+domain+","+lang_src+"->"+lang_tgt+") for TRANSLATION" << endl;
         return false;
     }
     
     tokenized_text = (*it_translation)->tokenize_str(text);
-    std::vector<std::string> tokenized_vec = (*it_translation)->tokenize(text);
-
-    vector<vector<string> > tokenized_batched ;
-    vector<string> tokenized_vec_tmp;
+    std::string tokenized_text_sp = (*it_translation)->spm_segment(tokenized_text);
+    std::vector<std::string> tokenized_vec;
+    Split(tokenized_text_sp,tokenized_vec," ");
+    vector< std::string > tokenized_batched ;
+    std::string tokenized_tmp;
     for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
     {
-        tokenized_vec_tmp.push_back(tokenized_vec[l_inc]);
-        if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() == 1 && (tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("\n")==0)))
+        if (l_inc==0) tokenized_tmp=tokenized_vec[l_inc];
+        else tokenized_tmp=tokenized_tmp+" "+tokenized_vec[l_inc];
+//         tokenized_tmp.push_back(tokenized_vec[l_inc]);
+        if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() == 1 && (tokenized_vec[l_inc].find("▁.")==0 || tokenized_vec[l_inc].find("▁!")==0  || tokenized_vec[l_inc].find("▁...")==0  || tokenized_vec[l_inc].find("▁?")==0 || tokenized_vec[l_inc].compare("\n")==0)))
         {
-            tokenized_batched.push_back(tokenized_vec_tmp);
-            tokenized_vec_tmp.clear();
+            tokenized_batched.push_back(tokenized_tmp);
+            tokenized_tmp.clear();
         }
     }
     if (_debug_mode != 0 ) cerr << "LOG: "<< currentDateTime() << "\t" << "BATCH SIZE:\t" << (int)tokenized_batched.size() << endl;
-    if ((int)tokenized_vec_tmp.size() > 0)
+    if ((int)tokenized_tmp.size() > 0)
     {
-        tokenized_batched.push_back(tokenized_vec_tmp);
+        tokenized_batched.push_back(tokenized_tmp);
     }    
-    return askTranslate(tokenized_batched, output, domain, lang, debugmode);
+    return askTranslation(tokenized_batched, output, domain, lang_src, lang_tgt, debugmode);
 }
 
-bool rest_server::askTranslate(vector<vector<string> > &input, json &output, string &domain, string &lang, bool debugmode)
+bool rest_server::askTranslation(vector<string> &input, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode)
 {
-    vector<vector<string> > result_batched ;
+    vector<string > translation_output ;
+    vector<string > alignement_output_scores ;
+    vector<float > translation_scores ;
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
     {
-        return (l_nmt->getDomain() == domain && l_nmt->getLang() == lang);
+        return (l_nmt->getDomain() == domain && l_nmt->getLangSrc() == lang_src && l_nmt->getLangTgt() == lang_tgt);
     }); 
     if (it_translation == _list_translation_model.end())
     {
-        cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain` value is not valid ("+domain+") for TRANSLATION" << endl;
+        cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain+lang_src+lang_tgt` values are not valid ("+domain+","+lang_src+"->"+lang_tgt+") for TRANSLATION" << endl;
         return false;
     }
-    (*it_translation)->NMTTranslate(input,result_batched);
-    
-    json i_tmp = json::array();
-    json k_tmp = json::array();
-    json t_tmp;
-    string  prev_tag("");
-    string  curr_tag("");
-    string  word_concat("");
-    for (int i=0;i<(int)input.size();i++)
+    if ((*it_translation)->NMTTranslateBatch(input, translation_output, translation_scores, alignement_output_scores))
     {
-        for (int j=0;j<(int)input.at(i).size();j++)
-        {
-            json j_tmp;
-            bool begin_tag=0;
-            curr_tag=result_batched.at(i).at(j);
-            if (curr_tag.find("I-") == 0)
-            {
-                curr_tag=curr_tag.substr(2);
-            }
-            if (curr_tag.find("B-") == 0)
-            {
-                begin_tag=1;
-                curr_tag=curr_tag.substr(2);
-            }
-            j_tmp.push_back(nlohmann::json::object_t::value_type(string("word"), input.at(i).at(j) ));
-            j_tmp.push_back(nlohmann::json::object_t::value_type(string("tag"), result_batched.at(i).at(j) ));
-            j_tmp.push_back(nlohmann::json::object_t::value_type(string("value"), string("")));
-            i_tmp.push_back(j_tmp);
-            if ((int)prev_tag.length() > 0 && (prev_tag.compare(curr_tag) != 0 || begin_tag))
-            {
-                t_tmp.push_back(nlohmann::json::object_t::value_type(string("phrase"), word_concat ));
-                t_tmp.push_back(nlohmann::json::object_t::value_type(string("tag"), prev_tag ));
-                json j_value({});
-                t_tmp.push_back(nlohmann::json::object_t::value_type(string("value"), j_value));
-                word_concat=input.at(i).at(j);
-                k_tmp.push_back(t_tmp);
-                t_tmp.clear();
-            }
-            else
-            {
-                if (word_concat.length() > 0) word_concat.append(" ");
-                word_concat.append(input.at(i).at(j));
-            }
-            prev_tag=curr_tag;
-        }
+        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_output));
+        output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), translation_scores));
+        if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("translation_alignements"), alignement_output_scores));
+        return true;
     }
-    if  ((int)word_concat.length() > 0)
-    {
-        t_tmp.push_back(nlohmann::json::object_t::value_type(string("phrase"), word_concat ));
-        t_tmp.push_back(nlohmann::json::object_t::value_type(string("tag"), prev_tag ));
-        json j_value({});
-        t_tmp.push_back(nlohmann::json::object_t::value_type(string("value"), j_value));
-        k_tmp.push_back(t_tmp);
-    }
-    if (debugmode) output.push_back(nlohmann::json::object_t::value_type(string("TRANSLATION_DEBUG"), i_tmp));
-    output.push_back(nlohmann::json::object_t::value_type(string("TRANSLATION"), k_tmp));
-    return true;
+    return false;
 }
 
 
 void rest_server::doAuth(const Rest::Request &request,
                          Http::ResponseWriter response) {
-  printCookies(request);
+//   printCookies(request);
   response.cookies().add(Http::Cookie("lang", "fr-FR"));
   response.send(Http::Code::Ok);
 }
+
+
+
+const std::string rest_server::currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
+
+

@@ -32,7 +32,7 @@ public:
   void init();
   void start();
   void shutdown() { httpEndpoint->shutdown();}
-  ostream currentDateTime();
+  const std::string currentDateTime();
 
 private:
   int _debug_mode;
@@ -46,24 +46,25 @@ private:
 
   void setupRoutes();
 
-  void doTranslateGet(const Rest::Request &request,
+  void doTranslationGet(const Rest::Request &request,
                            Http::ResponseWriter response);
 
-  void doTranslatePost(const Rest::Request &request,
+  void doTranslationPost(const Rest::Request &request,
                             Http::ResponseWriter response);
 
-  void doTranslateBatchPost(const Rest::Request &request,
+  void doTranslationBatchPost(const Rest::Request &request,
                                  Http::ResponseWriter response);
 
   void fetchParamWithDefault(const json& j, 
                               string& domain, 
-                              string& lang, 
+                              string& lang_src, 
+                              string& lang_tgt, 
                               int& count,
                               float& threshold,
                               bool& debugmode);
 
-  bool askTranslate(std::string &text, std::string &tokenized, json &output, string &domain, string &lang, bool debugmode);
-  bool askTranslate(vector<vector<string> > &input, json &output, string &domain, string &lang, bool debugmode);
+  bool askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode);
+  bool askTranslation(vector<string > &input, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode);
 
   void writeLog(string text_to_log) {}
 

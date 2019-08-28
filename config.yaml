@@ -13,4 +13,4 @@ models:
     nmt_model_port: 8080
     spm_model: resources/spm.model.sample
     source_language: fr
-    source_language: en
+    target_language: en

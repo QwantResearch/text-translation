@@ -112,9 +112,9 @@ void str_to_utf8(string& line)
 //     return line;
 }
 
-nmt::nmt(std::string model_name_param, std::string& address_server)
+nmt::nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt)
 {
-    LoadModel(model_name_param,address_server);
+    LoadModel(model_name_param,address_server,spm_file_model,lang_src,lang_tgt);
 }
 nmt::nmt()
 {
@@ -128,34 +128,47 @@ bool nmt::getLocal()
 }
 
 
-bool nmt::LoadModel(std::string model_name_param, std::string& address_server)
+bool nmt::LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt)
 {
     _model_name=model_name_param;
     _address=address_server;
     _local=false;
+    _lang_src=lang_src;
+    _lang_tgt=lang_tgt;
+    _spm_src=new spm(spm_file_model);
     return true;
 }
 
 
-bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::vector< std::string > > translation_output, std::vector< float >& output_translation_scores, std::vector< std::vector< std::string > >& output_alignement_scores)
+bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
 {
-    std::unique_ptr<WebSocket> ws(WebSocket::from_url(_address));
-    assert(ws);
-
-    ws->send(sentence_to_translate);
     std::string message;
-    while (ws->getReadyState() != WebSocket::CLOSED) {
-        bool gotMessage = false;
-        ws->poll();
-        ws->dispatch([gotMessageOut=&gotMessage, messageOut=&message, ws=ws.get()](const std::string& message) {
-            *gotMessageOut = true;
-            *messageOut = message;
-        });
-        if (gotMessage) {
-            ws->close();
-            break;
+    try
+    {
+        std::unique_ptr<WebSocket> ws(WebSocket::from_url(_address));
+        assert(ws);
+
+        ws->send(sentence_to_translate);
+        while (ws->getReadyState() != WebSocket::CLOSED) {
+            bool gotMessage = false;
+            ws->poll();
+            ws->dispatch([gotMessageOut=&gotMessage, messageOut=&message, ws=ws.get()](const std::string& message) {
+                *gotMessageOut = true;
+                *messageOut = message;
+            });
+            if (gotMessage) {
+                ws->close();
+                break;
+            }
         }
     }
+    catch (const std::exception& e)
+    {
+        cerr << "[ERROR]\twhile sending the request: " << e.what() << endl;
+        return false;
+    }
+    
+    
     vector<string> full_hypothesis;
     Split(message,full_hypothesis,"\n");
     int inc_hyp=0;
@@ -166,17 +179,18 @@ bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::vec
         std::vector< std::string > l_sentence;
         std::vector< std::string > l_alignement_scores;
         int inc_data=1;
-        Split(data[inc_data],l_sentence," ");
-        translation_output.push_back(l_sentence);
+        if ((int)translation_output.size()==inc_hyp) translation_output.push_back(spm_detokenize_str(data[inc_data]));
+        else translation_output[inc_hyp]=translation_output[inc_hyp]+" "+(spm_detokenize_str(data[inc_data]));
         inc_data++;
         if ((int)data.size() > 4)
         {
-            Split(data[inc_data],l_alignement_scores," ");
-            output_alignement_scores.push_back(l_alignement_scores);
+            if ((int)output_alignement_scores.size()==inc_hyp) output_alignement_scores.push_back(data[inc_data]);
+            else output_alignement_scores[inc_hyp]=output_alignement_scores[inc_hyp]+" "+(data[inc_data]);
             inc_data++;
         }
-        inc_data++; // iterationg to avoid F-score.        
-        output_translation_scores.push_back(atof(data[inc_data].c_str()));
+        inc_data++; // iterationg to avoid F0 score.        
+        if ((int)output_translation_scores.size()==inc_hyp) output_translation_scores.push_back(atof(data[inc_data].c_str()));
+        else output_translation_scores[inc_hyp]=output_translation_scores[inc_hyp]+(atof(data[inc_data].c_str()));
         inc_hyp++;
     }
     
@@ -185,5 +199,65 @@ bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::vec
 
 }
 
+bool nmt::NMTTranslateBatch(std::vector< std::string>& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
+{
+    int inc_hyp=0;
+    while (inc_hyp < (int)batch_sentence_to_translate.size())
+    {
+        NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, output_translation_scores, output_alignement_scores);
+        inc_hyp++;
+    }
+    return true;
+}
+
+std::vector <std::string> nmt::tokenize(std::string &input)
+{
+        tokenizer * tokenizer_tmp = new tokenizer(_lang_src,false);
+        std::vector <std::string> to_return = tokenizer_tmp->tokenize(input);
+        delete(tokenizer_tmp);
+        return to_return;
+}
+
+std::string nmt::tokenize_str(std::string &input)
+{
+        tokenizer * tokenizer_tmp = new tokenizer(_lang_src,false);
+        std::string to_return = tokenizer_tmp->tokenize_str(input);
+        delete(tokenizer_tmp);
+        return to_return;
+}
+
+std::string nmt::spm_segment(std::string &input)
+{
+        std::string to_return;
+        vector<std::string> to_process_vec_sp;
+        to_process_vec_sp=_spm_src->segment(input);
+        int inc_vec_sp=0;
+        while (inc_vec_sp < (int)to_process_vec_sp.size())
+        {
+            if (inc_vec_sp == 0) to_return = to_process_vec_sp[inc_vec_sp];
+            else to_return = to_return+" "+to_process_vec_sp[inc_vec_sp];
+            inc_vec_sp++;
+        }
+        return to_return;
+}
+
+std::string nmt::spm_detokenize_str(string& input)
+{
+    std::string to_return=input;
+    const char specialChar[] = "\xe2\x96\x81";
+    while((int)to_return.find(" ")>-1)
+    {
+        to_return=to_return.replace((int)to_return.find(" "),(int)strlen(" "),"");
+    }
+    while((int)to_return.find(specialChar)>-1)
+    {
+        to_return=to_return.replace((int)to_return.find(specialChar),(int)strlen(specialChar)," ");
+    }
+    if (to_return[0]==' ')
+    {
+        to_return=to_return.substr(1,(int)to_return.length()-1);
+    }
+    return to_return;
+}
 
 
