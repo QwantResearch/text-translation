@@ -50,6 +50,7 @@ WORKDIR /opt/text-translation
 COPY resources /opt/text-translation/resources
 
 RUN git checkout marian
+RUN git checkout marian
 
 RUN bash ./install.sh
 

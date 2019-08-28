@@ -24,9 +24,9 @@ set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive "
 #   )
 
 
-set(NMT_REMOTE_API text-translate)
+set(NMT_REMOTE_API text-translation)
 set(NMT_SOURCE_REMOTE_API 
-  ${PROJECT_SOURCE_DIR}/src/text-translate.cpp 
+  ${PROJECT_SOURCE_DIR}/src/text-translation.cpp 
   ${PROJECT_SOURCE_DIR}/src/rest_server.cpp 
   ${PROJECT_SOURCE_DIR}/src/tokenizer.cpp 
   ${PROJECT_SOURCE_DIR}/src/nmt.cpp 
