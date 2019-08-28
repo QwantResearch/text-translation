@@ -18,6 +18,8 @@ RUN apt-get -y update && \
         g++ \
         libboost-locale1.65-dev \
         libboost-regex1.65-dev \
+	libboost-thread1.65-dev \
+	libboost-system1.65-dev \
         libyaml-cpp-dev \
         git \
         automake \
