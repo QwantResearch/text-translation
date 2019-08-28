@@ -41,15 +41,18 @@ RUN apt-get -y update && \
 #RUN cmake --version
 
 
-#RUN git clone --recursive https://github.com/QwantResearch/qtranslate.git /opt/text-translate
-COPY . /opt/text-translate
+RUN git clone --recursive https://github.com/QwantResearch/qtranslate.git /opt/text-translation 
 
-WORKDIR /opt/text-translate
+WORKDIR /opt/text-translation
+
+COPY resources /opt/text-translation/resources
+
+RUN git checkout marian
 
 RUN bash ./install.sh
 
-#RUN groupadd -r qnlp && useradd --system -s /bin/bash -g qnlp qnlp
+RUN groupadd -r qnlp && useradd --system -s /bin/bash -g qnlp qnlp
 
-#USER qnlp 
+USER qnlp 
 
-#ENTRYPOINT ["/usr/local/bin/text-translate"]
+ENTRYPOINT ["/usr/local/bin/text-translation"]
