@@ -8,12 +8,9 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(LD_PRELOAD "libcurl.so.3")
 
 
-set(TF_DIR ${PROJECT_SOURCE_DIR}/../tensorflow/)
-# sentencepience install directory
-set(SPM_DIR $ENV{SPM_DIR})
-set(TF_SERVING_DIR ${PROJECT_SOURCE_DIR}/../serving/)
-include_directories(${TF_DIR} ${TF_DIR}/bazel-genfiles ${TF_DIR}/bazel-tensorflow/external/eigen_archive ${TF_DIR}/bazel-tensorflow/external/protobuf_archive/src ${TF_DIR}/bazel-tensorflow/external/nsync/public/ ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/../cpr/include /usr/local/include/ ${TF_SERVING_DIR} ${TF_SERVING_DIR}/bazel-genfiles /usr/local/include ${SPM_DIR}/include)
-link_directories(${TF_DIR}/bazel-bin/tensorflow ${PROJECT_SOURCE_DIR}/../cpr/build/lib /usr/local/lib ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/model_servers/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/apis/ ${TF_SERVING_DIR}/bazel-bin/tensorflow_serving/util/ /usr/lib /usr/local/lib ${SPM_DIR}/lib)
+include_directories(/usr/include /usr/local/include include)
+
+link_directories(/usr/lib /usr/local/lib)
 
 set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -O2 -std=c++11 -lpthread -fpermissive ")
 
