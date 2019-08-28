@@ -39,8 +39,8 @@ set(NMT_SOURCE_REMOTE_API
 add_executable(${NMT_REMOTE_API} ${NMT_SOURCE_REMOTE_API})
 
 
-set(TEST_CLIENT client_moses)
-set(TEST_CLIENT_SRC 
+set(TEST_CLIENT_MOSES client_moses)
+set(TEST_CLIENT_MOSES_SRC 
   ${PROJECT_SOURCE_DIR}/src/client_moses.cpp 
   )
 set(TEST_CLIENT_MARIAN client_marian)
@@ -49,7 +49,7 @@ set(TEST_CLIENT_MARIAN_SRC
   ${PROJECT_SOURCE_DIR}/src/utils.cpp
   )
 # add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
-add_executable(${TEST_CLIENT} ${TEST_CLIENT_SRC})
+add_executable(${TEST_CLIENT_MOSES} ${TEST_CLIENT_MOSES_SRC})
 add_executable(${TEST_CLIENT_MARIAN} ${TEST_CLIENT_MARIAN_SRC})
 
 # target_link_libraries(${NMT_EXECUTABLE_API} pistache pthread qnlp fasttext tensorflow_framework tensorflow_qnlp predict_proto model_proto optional grpc++ prediction_service_proto classification_proto get_model_metadata_proto regression_proto input_proto inference_proto boost_regex)
@@ -66,7 +66,7 @@ target_link_libraries(${NMT_REMOTE_API}
     sentencepiece
     easywsclient)
 
-target_link_libraries(${TEST_CLIENT} boost_system boost_thread pthread)
+target_link_libraries(${TEST_CLIENT_MOSES} boost_system boost_thread pthread)
 target_link_libraries(${TEST_CLIENT_MARIAN} boost_system boost_thread pthread easywsclient)
 
-install(TARGETS ${PROJECT_NAME} DESTINATION bin/)
+install(TARGETS ${TEST_CLIENT_MOSES} ${TEST_CLIENT_MARIAN} ${NMT_REMOTE_API}  DESTINATION bin/)
