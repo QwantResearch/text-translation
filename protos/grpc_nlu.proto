@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+service RouteNLU {
+    rpc GetDomains(Empty) returns (Domains) {}
+    rpc GetNLU(TextToParse) returns (TextParsed) {}
+    rpc StreamNLU(stream TextToParse) returns (stream TextParsed) {}
+}
+
+message Empty {
+}
+
+message Domains {
+    repeated string domains = 1;
+}
+
+message TextToParse {
+  string text = 1;
+  int32 count = 2;
+  string domain = 3;
+  string lang = 4;
+}
+
+message TextParsed {
+  string text = 1;
+  int32 count = 2;
+  string domain = 3;
+  string lang = 4;
+  string tokenized = 5;
+  repeated Tag tag = 6;
+}
+
+message Tag {
+    string phrase = 1;
+    string tag = 2;
+} 
