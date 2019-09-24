@@ -1,0 +1,25 @@
+version: "3"
+services:
+  nlu:
+    image: text-nlu:latest
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./models:/models
+    environment:
+      API_NLU_TFSERVING_HOST: tensorflow_serving:8500
+      API_NLU_THREADS: 1
+      API_NLU_PORT: 9009
+      API_NLU_CONFIG: /models/models.config
+      API_NLU_GRPC: 0
+      API_NLU_DEBUG: 1
+    depends_on:
+      - "tensorflow_serving"
+
+  tensorflow_serving:
+    image: "tensorflow/serving:latest"
+    volumes:
+      - ./models:/models
+    command: --model_config_file=/models/models.config
+    # We can't set MODEL_CONFIG_FILE environment variable:
+    # See https://github.com/tensorflow/serving/issues/1165
