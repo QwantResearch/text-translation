@@ -37,6 +37,6 @@ mkdir -p $PREFIX
 rm -rf build
 mkdir -p build
 pushd build
-	cmake .. -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release 
+	cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release  Protobuf_PROTOC_EXECUTABLE=/usr/local/bin/protoc ..
 	make -j && make install
 popd
