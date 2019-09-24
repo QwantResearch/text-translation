@@ -16,15 +16,21 @@ int debug = 0;
 std::string model_config_path("");
 int server_type = 0; // 0 -> REST, 1 -> GRPC
 std::string tfserving_host("");
-bool set_envvar[6]={0,0,0,0,0,0};
+std::string sentencepiece_model_filename("");
+std::string source_language("");
+std::string target_language("");
+bool set_envvar[9]={0,0,0,0,0,0,0,0,0};
 
 void usage() {
-  cout << "./text-translation [--threads <nthreads>] [--port <port>] [--grpc] "
+  cout << "./text-translation [--threads <nthreads>] [--port <port>] [--grpc] --spm <filename> --src <isolang> --tgt <isolang>"
           "[--debug] --model_config_path <filename> --tfserving_host <address:port>\n\n"
           "\t--threads (-t)           number of threads (default 1)\n"
           "\t--port (-p)              port to use (default 9009)\n"
           "\t--grpc (-g)              use grpc service instead of rest\n"
           "\t--debug (-d)             debug mode (default false)\n"
+          "\t--src (-i)               source language\n"
+          "\t--tgt (-o)               target language\n"
+          "\t--spm (-m)               sentencepiece model filename\n"
           "\t--model_config_path (-c) model_config_path file in which API configuration is set (needed)\n"
           "\t--tfserving_host (-s)    TFServing host (needed)\n"
           "\t--help (-h)              Show this message\n"
@@ -33,8 +39,11 @@ void usage() {
 }
 
 void ProcessArgs(int argc, char **argv) {
-  const char *const short_opts = "p:t:c:s:dhg";
+  const char *const short_opts = "m:i:o:p:t:c:s:dhg";
   const option long_opts[] = {
+      {"spm", 1, nullptr, 'm'},
+      {"src", 1, nullptr, 'i'},
+      {"tgt", 1, nullptr, 'o'},
       {"port", 1, nullptr, 'p'},
       {"threads", 1, nullptr, 't'},
       {"model_config_path", 1, nullptr, 'c'},
@@ -99,6 +108,30 @@ void ProcessArgs(int argc, char **argv) {
       tfserving_host = optarg;
       break;
 
+    case 'm':
+      if (set_envvar[6]==1)
+      {
+          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of sentencepiece model filemane ("<< sentencepiece_model_filename <<"), given by environment variable, with " << optarg << endl;
+      }
+      sentencepiece_model_filename = optarg;
+      break;
+
+    case 'i':
+      if (set_envvar[7]==1)
+      {
+          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of source language ("<< source_language <<"), given by environment variable, with " << optarg << endl;
+      }
+      source_language = optarg;
+      break;
+
+    case 'o':
+      if (set_envvar[8]==1)
+      {
+          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of target language ("<< target_language <<"), given by environment variable, with " << optarg << endl;
+      }
+      target_language = optarg;
+      break;
+
     case 'h': // -h or --help
     case '?': // Unrecognized option
     default:
@@ -152,6 +185,27 @@ int main(int argc, char **argv) {
       cout << "[INFO]\t" << currentDateTime() << "\tSetting the TFServing host value to "<< tfserving_host <<", given by environment variable." << endl;
   }
 
+  if (getenv("API_NMT_SENTENCE_PIECE_MODEL") != NULL) 
+  { 
+      sentencepiece_model_filename=getenv("API_NMT_SENTENCEPIECE_MODEL"); 
+      set_envvar[6]=1; 
+      cout << "[INFO]\t" << currentDateTime() << "\tSetting the SentencePiece model filename value to "<< sentencepiece_model_filename <<", given by environment variable." << endl;
+  }
+
+  if (getenv("API_NMT_SOURCE_LANGUAGE") != NULL) 
+  { 
+      source_language=getenv("API_NMT_SOURCE_LANGUAGE"); 
+      set_envvar[7]=1; 
+      cout << "[INFO]\t" << currentDateTime() << "\tSetting the Source Language value to "<< source_language <<", given by environment variable." << endl;
+  }
+
+  if (getenv("API_NMT_TARGET_LANGUAGE") != NULL) 
+  { 
+      target_language=getenv("API_NMT_TARGET_LANGUAGE"); 
+      set_envvar[8]=1; 
+      cout << "[INFO]\t" << currentDateTime() << "\tSetting the Target Language value to "<< target_language <<", given by environment variable." << endl;
+  }
+
   ProcessArgs(argc, argv);
 
   cout << "[INFO]\t" << currentDateTime() << "\tCores = " << hardware_concurrency() << endl;
@@ -159,15 +213,18 @@ int main(int argc, char **argv) {
   cout << "[INFO]\t" << currentDateTime() << "\tUsing port " << num_port << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing model config path " << model_config_path << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing tfserving host " << tfserving_host << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tUsing Source Language " << source_language << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tUsing Target Language " << target_language << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tUsing sentencepiece model " << sentencepiece_model_filename << endl;
 
   unique_ptr<AbstractServer> nmt_api;
 
   if (server_type == 0) {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing REST API" << endl;
-    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, tfserving_host, num_port, debug));
+    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, tfserving_host, sentencepiece_model_filename, source_language, target_language, num_port, debug));
   } else {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing gRPC API" << endl;
-    nmt_api = std::unique_ptr<grpc_server>(new grpc_server(model_config_path, tfserving_host, num_port, debug));
+    nmt_api = std::unique_ptr<grpc_server>(new grpc_server(model_config_path, tfserving_host, sentencepiece_model_filename, source_language, target_language, num_port, debug));
   }
   nmt_api->init(threads); //TODO: Use threads number
   nmt_api->start();

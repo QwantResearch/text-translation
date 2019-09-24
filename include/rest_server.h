@@ -38,7 +38,6 @@ public:
 private:
   int _debug_mode;
   int _nbr_threads;
-  std::vector<nmt *> _list_translation_model;
   std::shared_ptr<Http::Endpoint> httpEndpoint;
   Rest::Router router;
   typedef std::mutex Lock;

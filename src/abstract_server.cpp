@@ -3,13 +3,13 @@
 
 #include "abstract_server.h"
 
-AbstractServer::AbstractServer(std::string& model_config_path, std::string& tfserving_host, int num_port, int debug_mode){
+AbstractServer::AbstractServer(std::string& model_config_path, std::string& tfserving_host, std::string& spm_model_filename, std::string& lang_src, std::string& lang_tgt, int num_port, int debug_mode){
   _debug_mode = debug_mode;
   _num_port = num_port;
   _model_config_path = model_config_path;
   _tfserving_host = tfserving_host;
 
-  _nmt = make_shared<nmt>(_debug_mode, _model_config_path, _tfserving_host);
+  _nmt = make_shared<nmt>(_model_config_path, _tfserving_host, spm_model_filename, lang_src,lang_tgt);
 }
 
 
@@ -17,8 +17,8 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
 {
     _debug_mode = debug;
     _num_port = num_port;
-    _model_config_path = model_config_path;
-    _tfserving_host = tfserving_host;
+//     _model_config_path = model_config_path;
+//     _tfserving_host = tfserving_host;
     std::string line;
     YAML::Node config;
 
