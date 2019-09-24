@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-service RouteNLU {
+service RouteNMT {
     rpc GetDomains(Empty) returns (Domains) {}
-    rpc GetNLU(TextToParse) returns (TextParsed) {}
-    rpc StreamNLU(stream TextToParse) returns (stream TextParsed) {}
+    rpc GetNMT(TextToParse) returns (TextParsed) {}
+    rpc StreamNMT(stream TextToParse) returns (stream TextParsed) {}
 }
 
 message Empty {

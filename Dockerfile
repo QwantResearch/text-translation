@@ -15,9 +15,6 @@ RUN apt-get -y update && \
  	vim
  	
 
-#RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-#RUN curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
-
 
 RUN apt-get -y update && \
     apt-get -y install \
@@ -51,8 +48,6 @@ RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 RUN cmake --version
 
 RUN python3 -m pip install grpcio grpcio-tools
-
-# RUN git clone --recursive https://github.com/QwantResearch/qtranslate.git /opt/text-translation 
 
 WORKDIR /opt/text-translation
 

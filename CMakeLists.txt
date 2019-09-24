@@ -47,19 +47,22 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11 -lpthread")
 
 set(NMT_REMOTE_API text-translation)
 set(NMT_SOURCE_REMOTE_API 
-  ${PROJECT_SOURCE_DIR}/src/text-translation.cpp 
-  ${PROJECT_SOURCE_DIR}/src/rest_server.cpp 
-  ${PROJECT_SOURCE_DIR}/src/tokenizer.cpp 
-  ${PROJECT_SOURCE_DIR}/src/nmt.cpp 
-  ${PROJECT_SOURCE_DIR}/src/smt.cpp 
-  ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
-  ${PROJECT_SOURCE_DIR}/src/spm.cpp 
-  ${PROJECT_SOURCE_DIR}/src/utils.cpp
+                    ${PROJECT_SOURCE_DIR}/src/text-translation.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/rest_server.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/tokenizer.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/nmt.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/smt.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/bpe.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/spm.cpp 
+                    ${PROJECT_SOURCE_DIR}/src/utils.cpp
+                    ${PROJECT_SOURCE_DIR}/src/abstract_server.cpp
+                    ${PROJECT_SOURCE_DIR}/src/grpc_route_nmt_impl.cpp
+                    ${PROJECT_SOURCE_DIR}/src/grpc_server.cpp
 
-                     ${PB_GRPC_HEADERS}
-                     ${PB_GRPC_SOURCES}
-                     ${PB_HEADERS}
-                     ${PB_SOURCES}
+                    ${PB_GRPC_HEADERS}
+                    ${PB_GRPC_SOURCES}
+                    ${PB_HEADERS}
+                    ${PB_SOURCES}
   )
 # add_executable(${NMT_EXECUTABLE_API} ${NMT_SOURCE_API})
 add_executable(${NMT_REMOTE_API} ${NMT_SOURCE_REMOTE_API})
