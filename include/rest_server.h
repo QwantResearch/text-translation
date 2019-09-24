@@ -16,23 +16,24 @@
 #include <time.h>
 #include "yaml-cpp/yaml.h"
 
-#include "nmt.h"
-#include "tokenizer.h"
+#include "abstract_server.h"
 
 using namespace std;
 using namespace nlohmann;
 using namespace Pistache;
 
-class rest_server {
+using grpc::Status;
+
+class rest_server : public AbstractServer {
 
 public:
-  rest_server(string &config_file, int &threads, int debug_mode = 0);
+  using AbstractServer::AbstractServer;
+//   rest_server(string &config_file, int &threads, int debug_mode = 0);
   ~rest_server(){httpEndpoint->shutdown();};
 
-  void init();
-  void start();
-  void shutdown() { httpEndpoint->shutdown();}
-  const std::string currentDateTime();
+  void init(size_t thr = 2) override;
+  void start() override;
+  void shutdown() override;
 
 private:
   int _debug_mode;

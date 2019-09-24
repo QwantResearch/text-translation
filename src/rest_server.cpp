@@ -5,70 +5,14 @@
 #include "nmt.h"
 #include "utils.h"
 
-rest_server::rest_server(std::string &config_file, int &threads, int debug) 
-{
-    std::string line;
-    int port=9009;
-    YAML::Node config;
 
-    try 
-    {
-    // Reading the configuration file for filling the options.
-        config = YAML::LoadFile(config_file);
-        cout << "[INFO]\tDomain\t\tLocation/filename\t\tlanguage"<< endl;
-        threads = config["threads"].as<int>() ;
-        port =  config["port"].as<int>() ;
-        debug =  config["debug"].as<int>() ;
-        YAML::Node modelconfig = config["models"]; 
-        for (const auto& modelnode: modelconfig)
-        {
-            std::string domain=modelnode.first.as<std::string>();
-            YAML::Node modelinfos = modelnode.second;
-            std::string nmt_model_end_point="ws://"+modelinfos["nmt_model_address"].as<std::string>()+":"+modelinfos["nmt_model_port"].as<std::string>()+"/translate";
-            std::string spm_model_filename=modelinfos["spm_model"].as<std::string>();
-            std::string lang_src=modelinfos["source_language"].as<std::string>();
-            std::string lang_tgt=modelinfos["target_language"].as<std::string>();
-            try 
-            {
-//                 shared_ptr<Channel> channel = CreateChannel(nmt_model_end_point,grpc::InsecureChannelCredentials());
-                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, lang_src,lang_tgt);
-                _list_translation_model.push_back(nmt_pointer);
-                cout << "\t===> loaded" << endl;
-            } 
-            catch (invalid_argument& inarg) 
-            {
-                cerr << "[ERROR]\t" << inarg.what() << endl;
-                continue;
-            }
-        }
-    } catch (YAML::BadFile& bf) {
-      cerr << "[ERROR]\t" << bf.what() << endl;
-      exit(1);
-    }
-    _nbr_threads=threads;
-    cout << "[INFO]\tnumber of threads:\t"<< _nbr_threads << endl;
-    cout << "[INFO]\tport used:\t"<< port << endl;
-    if (debug > 0) cout << "[INFO]\tDebug mode activated" << endl;
-    else cout << "[INFO]\tDebug mode desactivated" << endl;
-    if ((int)_list_translation_model.size() == 0) 
-    {
-        cerr << "[ERROR]\tNo nmt model loaded, exiting." << endl;
-        exit(1);
-    }
-    
-    
-    
-    // Creating the entry point of the REST API.
-    Pistache::Port pport(port);
-    Address addr(Ipv4::any(), pport);
-    httpEndpoint = std::make_shared<Http::Endpoint>(addr);
-    _debug_mode = debug;
+void rest_server::init(size_t thr) {
+  // Creating the entry point of the REST API.
+  Pistache::Port pport(_num_port);
+  Address addr(Ipv4::any(), pport);
+  httpEndpoint = std::make_shared<Http::Endpoint>(addr);
 
-}
-
-
-void rest_server::init() {
-  auto opts = Http::Endpoint::options().threads(_nbr_threads).flags(
+  auto opts = Http::Endpoint::options().threads(thr).flags(
       Tcp::Options::InstallSignalHandler);
   httpEndpoint->init(opts);
   setupRoutes();
@@ -90,7 +34,7 @@ void rest_server::setupRoutes() {
               Routes::bind(&rest_server::doTranslationBatchPost, this));
 
   Routes::Get(router, "/translate/",
-              Routes::bind(&rest_server::doTranslationGet, this));
+              Routes::bind(&rest_server::doTranslationGet, this));  
 }
 
 
@@ -321,18 +265,20 @@ void rest_server::doAuth(const Rest::Request &request,
   response.send(Http::Code::Ok);
 }
 
-
-
-const std::string rest_server::currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-    // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-
-    return buf;
+void rest_server::shutdown() {
+  httpEndpoint->shutdown(); 
 }
+
+// const std::string rest_server::currentDateTime() {
+//     time_t     now = time(0);
+//     struct tm  tstruct;
+//     char       buf[80];
+//     tstruct = *localtime(&now);
+//     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+//     // for more information about date/time format
+//     strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+// 
+//     return buf;
+// }
 
 

@@ -53,10 +53,10 @@ WORKDIR /opt/text-translation
 
 COPY . /opt/text-translation/
 
-RUN bash ./install.sh
+#RUN bash ./install.sh
 
-RUN groupadd -r qnlp && useradd --system -s /bin/bash -g qnlp qnlp
+#RUN groupadd -r qnlp && useradd --system -s /bin/bash -g qnlp qnlp
 
-USER qnlp 
+#USER qnlp 
 
-ENTRYPOINT ["/usr/local/bin/text-translation"]
+#ENTRYPOINT ["/usr/local/bin/text-translation"]

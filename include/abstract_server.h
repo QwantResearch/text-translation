@@ -16,6 +16,7 @@ using namespace std;
 class AbstractServer {
 public:
     AbstractServer(std::string &model_config_path, std::string& tfserving_host, int num_port, int debug_mode);
+    AbstractServer(std::string &config_file,  int num_port, int debug);
     virtual ~AbstractServer() {}
     virtual void init(size_t thr = 2) = 0;
     virtual void start() = 0;
@@ -28,6 +29,7 @@ protected:
   std::string _model_config_path;
   std::string _tfserving_host;
   std::shared_ptr<nmt> _nmt;
+  std::vector<nmt *> _list_translation_model;
 };
 
 #endif // __ABSTRACT_SERVER_H

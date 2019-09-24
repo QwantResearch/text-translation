@@ -19,6 +19,8 @@ pushd vendor/qnlp-toolkit
 	bash install.sh $PREFIX
 popd
  
+bash install_grpc.sh
+
 for dep in pistache json sentencepiece easywsclient
 do
 pushd vendor/$dep

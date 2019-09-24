@@ -1,13 +1,13 @@
 // Copyright 2019 Qwant Research. Licensed under the terms of the Apache 2.0
 // license. See LICENSE in the project root.
 
-#include "grpc_route_nlu_impl.h"
+#include "grpc_route_nmt_impl.h"
 
-grpc::Status GrpcRouteNLUImpl::GetDomains(grpc::ServerContext* context,
+grpc::Status GrpcRouteNMTImpl::GetDomains(grpc::ServerContext* context,
                                                const Empty* request,
                                                Domains* response) {
 
-  for (auto& it: _nlu->getDomains()) {
+  for (auto& it: _nmt->getDomains()) {
     response->add_domains(it);
   }
   if (_debug_mode)
@@ -15,12 +15,12 @@ grpc::Status GrpcRouteNLUImpl::GetDomains(grpc::ServerContext* context,
   return grpc::Status::OK;
 }
 
-grpc::Status GrpcRouteNLUImpl::GetNLU(grpc::ServerContext* context,
+grpc::Status GrpcRouteNMTImpl::GetNMT(grpc::ServerContext* context,
                                                const TextToParse* request,
                                                TextParsed* response) {
 
   if (_debug_mode) {
-    cerr << "[DEBUG]: " << currentDateTime() << "\t" << "GetNLU";
+    cerr << "[DEBUG]: " << currentDateTime() << "\t" << "GetNMT";
     cerr << "\t" << request->text() << "\t";
   }
 
@@ -31,14 +31,14 @@ grpc::Status GrpcRouteNLUImpl::GetNLU(grpc::ServerContext* context,
   std::string lang = response->lang();
   std::string tokenized;
 
-  std::string tokenized_text = _nlu->tokenize_str(text, lang);
-  std::vector<std::string> tokenized_vec = _nlu->tokenize(text, lang);
+  std::string tokenized_text = _nmt->tokenize_str(text, lang);
+  std::vector<std::string> tokenized_vec = _nmt->tokenize(text, lang);
 
   vector<vector<string> > tokenized_batched;
   tokenized_batched.push_back(tokenized_vec);
  
   std::vector<std::vector<std::string>> output_batch_tokens;
-  Status status = _nlu->NLUBatch(tokenized_batched, output_batch_tokens, domain);
+  Status status = _nmt->NMTBatch(tokenized_batched, output_batch_tokens, domain);
   if (!status.ok()){
     return status;
   }
@@ -50,14 +50,14 @@ grpc::Status GrpcRouteNLUImpl::GetNLU(grpc::ServerContext* context,
   return grpc::Status::OK;
 }
 
-grpc::Status GrpcRouteNLUImpl::StreamNLU(grpc::ServerContext* context,
+grpc::Status GrpcRouteNMTImpl::StreamNMT(grpc::ServerContext* context,
                                                    grpc::ServerReaderWriter< TextParsed,
                                                                             TextToParse>* stream) {
   TextToParse request;
   while (stream->Read(&request)) {
 
     if (_debug_mode) {
-      cerr << "[DEBUG]: " << currentDateTime() << "\t" << "StreamNLU";
+      cerr << "[DEBUG]: " << currentDateTime() << "\t" << "StreamNMT";
       cerr  << "\t" << request.text() << "\t";
     }
 
@@ -70,14 +70,14 @@ grpc::Status GrpcRouteNLUImpl::StreamNLU(grpc::ServerContext* context,
     std::string tokenized;
 
 
-    std::string tokenized_text = _nlu->tokenize_str(text, lang);
-    std::vector<std::string> tokenized_vec = _nlu->tokenize(text, lang);
+    std::string tokenized_text = _nmt->tokenize_str(text, lang);
+    std::vector<std::string> tokenized_vec = _nmt->tokenize(text, lang);
 
     vector<vector<string> > tokenized_batched;
     tokenized_batched.push_back(tokenized_vec);
   
     std::vector<std::vector<std::string>> output_batch_tokens;
-    Status status =_nlu->NLUBatch(tokenized_batched, output_batch_tokens, domain);
+    Status status =_nmt->NMTBatch(tokenized_batched, output_batch_tokens, domain);
     if (!status.ok()){
       return status;
     }
@@ -92,7 +92,7 @@ grpc::Status GrpcRouteNLUImpl::StreamNLU(grpc::ServerContext* context,
   return grpc::Status::OK;
 }
 
-void GrpcRouteNLUImpl::PrepareOutput(const TextToParse* request, TextParsed* response) {
+void GrpcRouteNMTImpl::PrepareOutput(const TextToParse* request, TextParsed* response) {
   std::string text = request->text();
 
   response->set_text(request->text());
@@ -101,7 +101,7 @@ void GrpcRouteNLUImpl::PrepareOutput(const TextToParse* request, TextParsed* res
   response->set_lang(request->lang());
 }
 
-void GrpcRouteNLUImpl::SetOutput(
+void GrpcRouteNMTImpl::SetOutput(
   TextParsed* response, 
   std::vector<std::vector<std::string>>& tokenized_batch, 
   std::vector<std::vector<std::string>>& output_batch_tokens) {
@@ -113,7 +113,7 @@ void GrpcRouteNLUImpl::SetOutput(
 
       std::string current_bio = output_batch_tokens[i][j];
       std::string current_tag = regex_replace(current_bio, regex("^(B-|I-)"), "");
-      // Not all NLU models are BIO, current_tag may equal current_bio
+      // Not all NMT models are BIO, current_tag may equal current_bio
 
       if (j == 0 || current_bio.find("B-") == 0 || (current_tag.compare(tag->tag()) != 0)) { 
         // either a "B-" or a tag that follows a different tag: we create a new tag
@@ -127,7 +127,7 @@ void GrpcRouteNLUImpl::SetOutput(
   }
 } 
 
-GrpcRouteNLUImpl::GrpcRouteNLUImpl(shared_ptr<nlu> nlu_ptr, int debug_mode) {
-  _nlu = nlu_ptr;
+GrpcRouteNMTImpl::GrpcRouteNMTImpl(shared_ptr<nmt> nmt_ptr, int debug_mode) {
+  _nmt = nmt_ptr;
   _debug_mode = debug_mode;
 }
