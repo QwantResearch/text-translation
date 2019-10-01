@@ -5,7 +5,6 @@
 #include <iostream>
 #include <boost/locale.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include "utils.h"
 
 #include <fstream>
 #include <fcntl.h>
@@ -78,8 +77,8 @@ class nmt
     public:
         nmt();
         ~nmt(){delete(_spm_src);delete(_spm_tgt);};
-        nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt);
-        bool LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt);
+        nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
+        bool LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
         bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
         bool NMTTranslateBatch(std::vector< std::string >& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
         bool getLocal();
@@ -98,6 +97,7 @@ class nmt
         
     private:
       bool _local;
+      bool _is_model_tfserving;
       int _debug_mode;
       spm * _spm_src;
       spm * _spm_tgt;

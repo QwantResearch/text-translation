@@ -15,7 +15,7 @@ using namespace std;
 
 class AbstractServer {
 public:
-    AbstractServer(std::string& model_config_path, std::string& tfserving_host, std::string& spm_model_filename, std::string& lang_src, std::string& lang_tgt, int num_port, int debug_mode);
+    AbstractServer(std::string& model_config_path, std::string& tfserving_host, std::string& spm_model_filename, std::string& lang_src, std::string& lang_tgt, int num_port, bool tensorflow_serving_type, int debug_mode);
     AbstractServer(std::string &config_file,  int num_port, int debug_mode);
     virtual ~AbstractServer() {}
     virtual void init(size_t thr = 2) = 0;

@@ -15,31 +15,33 @@ int threads = 1;
 int debug = 0;
 std::string model_config_path("");
 int server_type = 0; // 0 -> REST, 1 -> GRPC
-std::string tfserving_host("");
+std::string server_host("");
 std::string sentencepiece_model_filename("");
 std::string source_language("");
 std::string target_language("");
-bool set_envvar[9]={0,0,0,0,0,0,0,0,0};
+bool tensorflow_serving_type=false;
+bool set_envvar[10]={0,0,0,0,0,0,0,0,0,0};
 
 void usage() {
-  cout << "./text-translation [--threads <nthreads>] [--port <port>] [--grpc] --spm <filename> --src <isolang> --tgt <isolang>"
-          "[--debug] --model_config_path <filename> --tfserving_host <address:port>\n\n"
-          "\t--threads (-t)           number of threads (default 1)\n"
-          "\t--port (-p)              port to use (default 9009)\n"
-          "\t--grpc (-g)              use grpc service instead of rest\n"
-          "\t--debug (-d)             debug mode (default false)\n"
-          "\t--src (-i)               source language\n"
-          "\t--tgt (-o)               target language\n"
-          "\t--spm (-m)               sentencepiece model filename\n"
-          "\t--model_config_path (-c) model_config_path file in which API configuration is set (needed)\n"
-          "\t--tfserving_host (-s)    TFServing host (needed)\n"
-          "\t--help (-h)              Show this message\n"
+  cout << "./text-translation [--threads <nthreads>] [--port <port>] [--grpc] [--tensorflow_serving] --spm <filename> --src <isolang> --tgt <isolang>"
+          "[--debug] --model_config_path <filename> --server_host <address:port>\n\n"
+          "\t--threads (-t)            number of threads (default 1)\n"
+          "\t--port (-p)               port to use (default 9009)\n"
+          "\t--grpc (-g)               use grpc service instead of rest\n"
+          "\t--debug (-d)              debug mode (default false)\n"
+          "\t--src (-i)                source language\n"
+          "\t--tgt (-o)                target language\n"
+          "\t--spm (-m)                sentencepiece model filename\n"
+          "\t--model_config_path (-c)  model_config_path file in which API configuration is set (needed)\n"
+          "\t--server_host (-s)        TFServing host (needed)\n"
+          "\t--tensorflow_serving (-f) Ask tensorflow serving (marian translation server is default)\n"
+          "\t--help (-h)               Show this message\n"
        << endl;
   exit(1);
 }
 
 void ProcessArgs(int argc, char **argv) {
-  const char *const short_opts = "m:i:o:p:t:c:s:dhg";
+  const char *const short_opts = "m:i:o:p:t:c:s:dhgf";
   const option long_opts[] = {
       {"spm", 1, nullptr, 'm'},
       {"src", 1, nullptr, 'i'},
@@ -47,10 +49,11 @@ void ProcessArgs(int argc, char **argv) {
       {"port", 1, nullptr, 'p'},
       {"threads", 1, nullptr, 't'},
       {"model_config_path", 1, nullptr, 'c'},
-      {"tfserving_host", 1, nullptr, 's'},
+      {"server_host", 1, nullptr, 's'},
       {"debug", 0, nullptr, 'd'},
       {"help", 0, nullptr, 'h'},
       {"grpc", 0, nullptr, 'g'},
+      {"tensorflow_serving", 0, nullptr, 'f'},
       {nullptr, 0, nullptr, 0}};
 
   while (true) {
@@ -103,9 +106,9 @@ void ProcessArgs(int argc, char **argv) {
     case 's':
       if (set_envvar[5]==1)
       {
-          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of tfserving_host ("<< tfserving_host <<"), given by environment variable, with " << optarg << endl;
+          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of server_host ("<< server_host <<"), given by environment variable, with " << optarg << endl;
       }
-      tfserving_host = optarg;
+      server_host = optarg;
       break;
 
     case 'm':
@@ -132,6 +135,14 @@ void ProcessArgs(int argc, char **argv) {
       target_language = optarg;
       break;
 
+    case 'f':
+      if (set_envvar[9]==1)
+      {
+          cout << "[INFO]\t" << currentDateTime() << "\tErasing previous value of tensorflow_serving_type ("<< tensorflow_serving_type <<"), given by environment variable, with " << optarg << endl;
+      }
+      tensorflow_serving_type = true;
+      break;
+
     case 'h': // -h or --help
     case '?': // Unrecognized option
     default:
@@ -139,9 +150,9 @@ void ProcessArgs(int argc, char **argv) {
       break;
     }
   }
-  if (model_config_path == "" || tfserving_host == "") {
+  if (model_config_path == "" || server_host == "") {
     cerr << "[ERROR]\t" << currentDateTime() << "\tError, you must set a model_config_path "
-         << "and a tfserving_host" << endl;
+         << "and a server_host" << endl;
     usage();
     exit(1);
   }
@@ -178,11 +189,11 @@ int main(int argc, char **argv) {
       set_envvar[4]=1; 
       cout << "[INFO]\t" << currentDateTime() << "\tSetting the config filename value to "<< model_config_path <<", given by environment variable." << endl;
   }
-  if (getenv("API_NMT_TFSERVING_HOST") != NULL) 
+  if (getenv("API_NMT_SERVER_HOST") != NULL) 
   { 
-      tfserving_host=getenv("API_NMT_TFSERVING_HOST"); 
+      server_host=getenv("API_NMT_SERVER_HOST"); 
       set_envvar[5]=1; 
-      cout << "[INFO]\t" << currentDateTime() << "\tSetting the TFServing host value to "<< tfserving_host <<", given by environment variable." << endl;
+      cout << "[INFO]\t" << currentDateTime() << "\tSetting the TFServing host value to "<< server_host <<", given by environment variable." << endl;
   }
 
   if (getenv("API_NMT_SENTENCE_PIECE_MODEL") != NULL) 
@@ -206,25 +217,33 @@ int main(int argc, char **argv) {
       cout << "[INFO]\t" << currentDateTime() << "\tSetting the Target Language value to "<< target_language <<", given by environment variable." << endl;
   }
 
+  if (getenv("API_NMT_TENSORFLOW_SERVING") != NULL) 
+  { 
+      tensorflow_serving_type=getenv("API_NMT_TENSORFLOW_SERVING"); 
+      set_envvar[9]=1; 
+      cout << "[INFO]\t" << currentDateTime() << "\tSetting the Target tensorflow_serving_type value to "<< tensorflow_serving_type <<", given by environment variable." << endl;
+  }
+
   ProcessArgs(argc, argv);
 
   cout << "[INFO]\t" << currentDateTime() << "\tCores = " << hardware_concurrency() << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing " << threads << " threads" << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing port " << num_port << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing model config path " << model_config_path << endl;
-  cout << "[INFO]\t" << currentDateTime() << "\tUsing tfserving host " << tfserving_host << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tUsing translation server host " << server_host << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing Source Language " << source_language << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing Target Language " << target_language << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing sentencepiece model " << sentencepiece_model_filename << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tUsing tensorflow serving " << tensorflow_serving_type << endl;
 
   unique_ptr<AbstractServer> nmt_api;
 
   if (server_type == 0) {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing REST API" << endl;
-    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, tfserving_host, sentencepiece_model_filename, source_language, target_language, num_port, debug));
+    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, server_host, sentencepiece_model_filename, source_language, target_language, num_port, tensorflow_serving_type, debug));
   } else {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing gRPC API" << endl;
-    nmt_api = std::unique_ptr<grpc_server>(new grpc_server(model_config_path, tfserving_host, sentencepiece_model_filename, source_language, target_language, num_port, debug));
+    nmt_api = std::unique_ptr<grpc_server>(new grpc_server(model_config_path, server_host, sentencepiece_model_filename, source_language, target_language, num_port, tensorflow_serving_type, debug));
   }
   nmt_api->init(threads); //TODO: Use threads number
   nmt_api->start();

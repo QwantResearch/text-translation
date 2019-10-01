@@ -112,9 +112,9 @@ void str_to_utf8(string& line)
 //     return line;
 }
 
-nmt::nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt)
+nmt::nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type)
 {
-    LoadModel(model_name_param,address_server,spm_file_model,lang_src,lang_tgt);
+    LoadModel(model_name_param,address_server,spm_file_model,lang_src,lang_tgt, tensorflow_serving_type);
 }
 nmt::nmt()
 {
@@ -128,8 +128,9 @@ bool nmt::getLocal()
 }
 
 
-bool nmt::LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt)
+bool nmt::LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type)
 {
+    _is_model_tfserving=tensorflow_serving_type;
     _model_name=model_name_param;
     _address=address_server;
     _local=false;
