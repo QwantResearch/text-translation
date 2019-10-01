@@ -1,0 +1,37 @@
+# Copyright 2019 Qwant Research. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+FROM ubuntu:18.04
+
+LABEL authors="Estelle Maudet, Pierre Jackman, Christophe Servan"
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get -y update && \
+    apt-get -y install \
+ 	
+
+
+RUN apt-get -y update && \
+    apt-get -y install \
+    curl \
+    vim \
+    wget \
+    git \
+    cmake \
+    build-essential \
+    libboost-all-dev \
+    libprotobuf10 \
+    protobuf-compiler \
+    libprotobuf-dev \
+    openssl \
+    libssl-dev \
+    libgoogle-perftools-dev
+ 
+RUN git clone https://github.com/marian-nmt/marian-dev.git /opt/marian-dev
+
+WORKDIR /opt/marian-dev
+
+RUN mkdir build && cd build && cmake .. && make -j && make install 

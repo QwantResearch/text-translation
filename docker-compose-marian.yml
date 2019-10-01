@@ -1,0 +1,29 @@
+version: "3"
+services:
+  nmt:
+    image: text-translation:latest
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./models:/models
+    environment:
+      API_NMT_SERVER_HOST: marian_server:8500
+      API_NMT_THREADS: 1
+      API_NMT_PORT: 9009
+      API_NMT_CONFIG: /models/models.config
+      API_NMT_SENTENCE_PIECE_MODEL:/models/spm.model.bin
+      # replace the xx by a valid value (e.g. fr for french)
+      API_NMT_SOURCE_LANGUAGE:xx
+      API_NMT_TARGET_LANGUAGE:xx 
+      API_NMT_GRPC: 0
+      API_NMT_DEBUG: 1
+      API_NMT_TENSORFLOW_SERVING: 0
+    depends_on:
+      - "marian_server"
+
+  marian_server:
+    build: ./Dockerfile.marian
+    tag: "marian_server:latest"
+    volumes:
+      - ./models:/models
+    command: -c /models/config.yml --port 8500 --n-best --alignment
