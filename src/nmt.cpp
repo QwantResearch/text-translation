@@ -278,10 +278,10 @@ bool nmt::CheckModelsStatus() {
     }
     
     // We currently support only one version per model, that's why we check only first model_version_status
-    if (_debug_mode){
-      tensorflow::serving::ModelVersionStatus_State state = response.model_version_status().at(0).state();
-      cerr << "[DEBUG]\t" << currentDateTime() << "\t" << domain << " model status: " << mapState[state] << endl;
-    } 
+//     if (_debug_mode){
+//       tensorflow::serving::ModelVersionStatus_State state = response.model_version_status().at(0).state();
+//       cerr << "[DEBUG]\t" << currentDateTime() << "\t" << domain << " model status: " << mapState[state] << endl;
+//     } 
   }
   return true;
 }
@@ -379,8 +379,8 @@ Status nmt::NMTBatch(
     std::string domain) {
 
   // Pad batch.
-  std::vector<int> lengths = PadBatch(batch_tokens);
-
+  std::vector<int> lengths = PadBatch(batch_tokens); 
+  std::vector<int> output_lengths;
   long batch_size = batch_tokens.size();
   long max_length = batch_tokens.front().size();
 
@@ -417,23 +417,23 @@ Status nmt::NMTBatch(
 
   inputs["tokens"] = tokens_tensor;
 
-  // PROTO: chars_tensor
-  tensorflow::TensorProto chars_tensor;
-  chars_tensor.set_dtype(tensorflow::DataType::DT_STRING);
-
-  for (int i = 0; i < batch_size; i++) {
-      for (int j = 0; j < max_length; j++) { 
-          for (int k = 0; k < max_length_word; k++) {
-            chars_tensor.add_string_val(batch_chars_list[i][j][k]);
-          }
-      }
-  }
-
-  chars_tensor.mutable_tensor_shape()->add_dim()->set_size(batch_size);
-  chars_tensor.mutable_tensor_shape()->add_dim()->set_size(max_length);
-  chars_tensor.mutable_tensor_shape()->add_dim()->set_size(max_length_word);
-
-  inputs["chars"] = chars_tensor;
+//   // PROTO: chars_tensor
+//   tensorflow::TensorProto chars_tensor;
+//   chars_tensor.set_dtype(tensorflow::DataType::DT_STRING);
+// 
+//   for (int i = 0; i < batch_size; i++) {
+//       for (int j = 0; j < max_length; j++) { 
+//           for (int k = 0; k < max_length_word; k++) {
+//             chars_tensor.add_string_val(batch_chars_list[i][j][k]);
+//           }
+//       }
+//   }
+// 
+//   chars_tensor.mutable_tensor_shape()->add_dim()->set_size(batch_size);
+//   chars_tensor.mutable_tensor_shape()->add_dim()->set_size(max_length);
+//   chars_tensor.mutable_tensor_shape()->add_dim()->set_size(max_length_word);
+// 
+//   inputs["chars"] = chars_tensor;
 
   // PROTO: lengths_tensor
   tensorflow::TensorProto lengths_tensor;
@@ -461,10 +461,22 @@ Status nmt::NMTBatch(
       std::string section = iter->first;
 
       int current_index = 0;
-      if ("tags" == section) {
+      if ("length" == section) {
+        for (int it=0; it < batch_size; it++){
+            output_lengths.push_back(atoi(result_tensor_proto.string_val(current_index).c_str()));
+            current_index++;
+        }
+      }
+    }
+    for (iter = map_outputs.begin(); iter != map_outputs.end(); ++iter) {
+      tensorflow::TensorProto& result_tensor_proto = iter->second;
+      std::string section = iter->first;
+
+      int current_index = 0;
+      if ("tokens" == section) {
         for (int it=0; it < batch_size; it++){
           std::vector<std::string> output_tokens;
-          for (int l=0; l < lengths[it]; l++){ //TODO: maybe use the "lenghts" value returned instead
+          for (int l=0; l < output_lengths[it]; l++){ 
             output_tokens.push_back(result_tensor_proto.string_val(current_index));
             current_index++;
           }
@@ -475,7 +487,8 @@ Status nmt::NMTBatch(
       ++output_index;
     }
    
-  } else {
+  }
+  else {
     cerr << "[ERROR]\t" << currentDateTime() << "\tError: gRPC call return code: " 
          << status.error_code() << ": "
          << status.error_message() << std::endl;

@@ -31,8 +31,8 @@ grpc::Status GrpcRouteNMTImpl::GetNMT(grpc::ServerContext* context,
   std::string lang = response->lang();
   std::string tokenized;
 
-  std::string tokenized_text = _nmt->tokenize_str(text, lang);
-  std::vector<std::string> tokenized_vec = _nmt->tokenize(text, lang);
+  std::string tokenized_text = _nmt->tokenize_str(text);
+  std::vector<std::string> tokenized_vec = _nmt->tokenize(text);
 
   vector<vector<string> > tokenized_batched;
   tokenized_batched.push_back(tokenized_vec);
@@ -70,8 +70,8 @@ grpc::Status GrpcRouteNMTImpl::StreamNMT(grpc::ServerContext* context,
     std::string tokenized;
 
 
-    std::string tokenized_text = _nmt->tokenize_str(text, lang);
-    std::vector<std::string> tokenized_vec = _nmt->tokenize(text, lang);
+    std::string tokenized_text = _nmt->tokenize_str(text);
+    std::vector<std::string> tokenized_vec = _nmt->tokenize(text);
 
     vector<vector<string> > tokenized_batched;
     tokenized_batched.push_back(tokenized_vec);
@@ -111,18 +111,18 @@ void GrpcRouteNMTImpl::SetOutput(
     for (int j = 0; j < tokenized.size(); j++) {
       std::string current_word = tokenized[j];
 
-      std::string current_bio = output_batch_tokens[i][j];
-      std::string current_tag = regex_replace(current_bio, regex("^(B-|I-)"), "");
+//       std::string current_bio = output_batch_tokens[i][j];
+//       std::string current_tag = regex_replace(current_bio, regex("^(B-|I-)"), "");
       // Not all NMT models are BIO, current_tag may equal current_bio
 
-      if (j == 0 || current_bio.find("B-") == 0 || (current_tag.compare(tag->tag()) != 0)) { 
-        // either a "B-" or a tag that follows a different tag: we create a new tag
-        tag = response->add_tag();
-        tag->set_phrase(current_word);
-        tag->set_tag(current_tag);
-      } else { // we have a tag that follows another same tag or a "I": we append text to phrase
-        tag->set_phrase(tag->phrase() + " " + current_word);
-      }
+//       if (j == 0 || current_bio.find("B-") == 0 || (current_tag.compare(tag->tag()) != 0)) { 
+//         // either a "B-" or a tag that follows a different tag: we create a new tag
+//         tag = response->add_tag();
+//         tag->set_phrase(current_word);
+//         tag->set_tag(current_tag);
+//       } else { // we have a tag that follows another same tag or a "I": we append text to phrase
+//         tag->set_phrase(tag->phrase() + " " + current_word);
+//       }
     }
   }
 } 

@@ -106,7 +106,7 @@ class nmt
       string _lang_src;
       string _lang_tgt;
       
-      static map<tensorflow::serving::ModelVersionStatus_State, std::string> mapState;
+      static std::map<tensorflow::serving::ModelVersionStatus_State, std::string> mapState;
 
       unique_ptr<PredictionService::Stub> _stub;
       shared_ptr<Channel> _channel;
