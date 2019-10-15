@@ -29,7 +29,10 @@ RUN apt-get -y update && \
         g++ \
         libboost-locale1.65-dev \
         libboost-regex1.65-dev \
+	libboost-system1.65-dev \
+	libboost-thread1.65-dev \
         libyaml-cpp-dev \
+	sudo \
         git \
         automake \
         build-essential \
@@ -41,9 +44,9 @@ RUN apt-get -y update && \
         libgflags-dev \
         libgtest-dev
  
-ADD https://cmake.org/files/v3.9/cmake-3.9.0-Linux-x86_64.sh /tmp/cmake-3.9.0-Linux-x86_64.sh
+ADD https://cmake.org/files/v3.13/cmake-3.13.0-Linux-x86_64.sh /tmp/cmake-3.13.0-Linux-x86_64.sh
 RUN mkdir /opt/cmake
-RUN sh /tmp/cmake-3.9.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
+RUN sh /tmp/cmake-3.13.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
 RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 RUN cmake --version
 
@@ -53,7 +56,9 @@ WORKDIR /opt/text-translation
 
 COPY . /opt/text-translation/
 
-#RUN bash ./install.sh
+RUN bash ./install_grpc.sh
+
+RUN bash ./install.sh
 
 #RUN groupadd -r qnlp && useradd --system -s /bin/bash -g qnlp qnlp
 
