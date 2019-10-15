@@ -17,7 +17,6 @@ echo "Installing dependencies"
 
 pushd vendor/qnlp-toolkit
 	rm -rf build
-	git pull  --recurse-submodules 
 	bash install.sh $PREFIX
 popd
  
