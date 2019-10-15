@@ -9,7 +9,9 @@ echo "Prefix set to $PREFIX"
 
 export CMAKE_PREFIX_PATH=$PREFIX
 
-git submodule update --init --recursive
+set -eou pipefail
+
+# git submodule update --init --recursive
 
 echo "Installing dependencies"
 
@@ -19,8 +21,6 @@ pushd vendor/qnlp-toolkit
 	bash install.sh $PREFIX
 popd
  
-bash install_grpc.sh
-
 for dep in pistache json sentencepiece easywsclient
 do
 pushd vendor/$dep
