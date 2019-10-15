@@ -27,7 +27,7 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
     // Reading the configuration file for filling the options.
         config = YAML::LoadFile(config_file);
         cout << "[INFO]\tDomain\t\tLocation/filename\t\tlanguage"<< endl;
-        _num_port =  config["port"].as<int>() ;
+//        _num_port =  config["port"].as<int>() ;
         YAML::Node modelconfig = config["models"]; 
         for (const auto& modelnode: modelconfig)
         {
