@@ -31,6 +31,7 @@ RUN apt-get -y update && \
         libboost-regex1.65-dev \
         libyaml-cpp-dev \
         git \
+        sudo \
         automake \
         build-essential \
         autoconf \
@@ -39,11 +40,12 @@ RUN apt-get -y update && \
         libc++-dev \
         libssl-dev \
         libgflags-dev \
+        sudo \
         libgtest-dev
  
-ADD https://cmake.org/files/v3.9/cmake-3.9.0-Linux-x86_64.sh /tmp/cmake-3.9.0-Linux-x86_64.sh
+ADD https://cmake.org/files/v3.13/cmake-3.13.0-Linux-x86_64.sh /tmp/cmake-3.13.0-Linux-x86_64.sh
 RUN mkdir /opt/cmake
-RUN sh /tmp/cmake-3.9.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
+RUN sh /tmp/cmake-3.13.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
 RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 RUN cmake --version
 
