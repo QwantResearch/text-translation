@@ -39,7 +39,7 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
             std::string lang_tgt=modelinfos["target_language"].as<std::string>();
             try 
             {
-                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, lang_src,lang_tgt);
+                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, lang_src,lang_tgt,false);
                 _list_translation_model.push_back(nmt_pointer);
                 cout << "\t===> loaded" << endl;
             } 
