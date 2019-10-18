@@ -13,7 +13,7 @@ export CMAKE_PREFIX_PATH=$PREFIX
 set -eou pipefail
 
 
-pushd vendor/grpc
+pushd third_party/grpc
     # Based on https://github.com/grpc/grpc/blob/master/test/distrib/cpp/run_distrib_test_cmake.sh
 
     # Install c-ares

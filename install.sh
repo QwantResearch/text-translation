@@ -15,12 +15,12 @@ set -eou pipefail
 
 echo "Installing dependencies"
 
-pushd vendor/qnlp-toolkit
+pushd third_party/qnlp-toolkit
 	rm -rf build
 	bash install.sh -p $PREFIX -g
 popd
 
-pushd vendor/sentencepiece
+pushd third_party/sentencepiece
         rm -rf build
         mkdir -p build
         pushd build
@@ -33,7 +33,7 @@ popd
 
 for dep in pistache json easywsclient
 do
-pushd vendor/$dep
+pushd third_party/$dep
         rm -rf build
         mkdir -p build
         pushd build
