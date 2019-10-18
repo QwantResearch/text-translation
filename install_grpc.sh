@@ -42,7 +42,7 @@ pushd vendor/grpc
     pushd third_party/protobuf
         mkdir -p cmake/build
         pushd cmake/build
-            cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..
+            cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
             make -j4 && sudo make install
         popd
     popd
