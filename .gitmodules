@@ -1,18 +1,18 @@
-[submodule "vendor/qnlp-toolkit"]
-	path = vendor/qnlp-toolkit
-	url = https://github.com/QwantResearch/qnlp-toolkit.git
-[submodule "vendor/pistache"]
-	path = vendor/pistache
-	url = https://github.com/QwantResearch/pistache.git
-[submodule "vendor/json"]
-	path = vendor/json
-	url = https://github.com/nlohmann/json.git
-[submodule "vendor/grpc"]
-	path = vendor/grpc
+[submodule "third_party/grpc"]
+	path = third_party/grpc
 	url = https://github.com/grpc/grpc.git
-[submodule "vendor/easywsclient"]
-	path = vendor/easywsclient
-	url = https://github.com/cservan/easywsclient.git
-[submodule "vendor/sentencepiece"]
-	path = vendor/sentencepiece
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "third_party/sentencepiece"]
+	path = third_party/sentencepiece
 	url = https://github.com/google/sentencepiece.git
+[submodule "third_party/qnlp-toolkit"]
+	path = third_party/qnlp-toolkit
+	url = https://github.com/QwantResearch/qnlp-toolkit.git
+[submodule "third_party/pistache"]
+	path = third_party/pistache
+	url = https://github.com/oktal/pistache.git
+[submodule "third_party/easywsclient"]
+	path = third_party/easywsclient
+	url = https://github.com/cservan/easywsclient.git

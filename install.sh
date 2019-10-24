@@ -15,20 +15,31 @@ set -eou pipefail
 
 echo "Installing dependencies"
 
-pushd vendor/qnlp-toolkit
+pushd third_party/qnlp-toolkit
 	rm -rf build
-	bash install.sh $PREFIX
+	bash install.sh -p $PREFIX -g
 popd
- 
-for dep in pistache json sentencepiece easywsclient
+
+pushd third_party/sentencepiece
+        rm -rf build
+        mkdir -p build
+        pushd build
+                cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release -DSPM_USE_BUILTIN_PROTOBUF=OFF  Protobuf_PROTOC_EXECUTABLE=/usr/local/bin/protoc ..
+                make -j && make install
+        popd
+popd
+
+
+
+for dep in pistache json easywsclient
 do
-pushd vendor/$dep
-	rm -rf build
-	mkdir -p build
-	pushd build
-		cmake .. -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release
-		make -j && make install
-	popd
+pushd third_party/$dep
+        rm -rf build
+        mkdir -p build
+        pushd build
+                cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release ..
+                make -j && make install
+        popd
 popd
 done
 

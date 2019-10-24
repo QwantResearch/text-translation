@@ -13,7 +13,7 @@ export CMAKE_PREFIX_PATH=$PREFIX
 set -eou pipefail
 
 
-pushd vendor/grpc
+pushd third_party/grpc
     # Based on https://github.com/grpc/grpc/blob/master/test/distrib/cpp/run_distrib_test_cmake.sh
 
     # Install c-ares
@@ -42,7 +42,7 @@ pushd vendor/grpc
     pushd third_party/protobuf
         mkdir -p cmake/build
         pushd cmake/build
-            cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..
+            cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
             make -j4 && sudo make install
         popd
     popd
