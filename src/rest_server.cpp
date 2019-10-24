@@ -12,8 +12,7 @@ void rest_server::init(size_t thr) {
   Address addr(Ipv4::any(), pport);
   httpEndpoint = std::make_shared<Http::Endpoint>(addr);
 
-  auto opts = Http::Endpoint::options().threads(thr).flags(
-      Tcp::Options::InstallSignalHandler);
+  auto opts = Http::Endpoint::options().threads(thr);
   httpEndpoint->init(opts);
   setupRoutes();
 }
@@ -71,7 +70,7 @@ void rest_server::doTranslationPost(const Rest::Request &request,
   
   int count;
   float threshold;
-  bool debugmode;
+  int debugmode;
   string domain;
   string lang_src;  
   string lang_tgt;  
@@ -113,7 +112,7 @@ void rest_server::doTranslationBatchPost(const Rest::Request &request,
 
   int count;
   float threshold;
-  bool debugmode;
+  int debugmode;
   string domain;
   string lang_src;
   string lang_tgt;
@@ -157,22 +156,15 @@ void rest_server::doTranslationBatchPost(const Rest::Request &request,
 }
 
 
-void rest_server::fetchParamWithDefault(const nlohmann::json& j, 
-                            string& domain, string& lang_src, string& lang_tgt, 
-                            int& count,
-                            float& threshold,
-                            bool& debugmode){
+void rest_server::fetchParamWithDefault(const nlohmann::json& j, std::__cxx11::string& domain, std::__cxx11::string& lang_src, std::__cxx11::string& lang_tgt, int& count, float& threshold, int& debugmode)
+{
   count = 10;
   threshold = 0.0;
-  debugmode = false;
+  debugmode = _debug_mode;
 
   if (j.find("count") != j.end()) {
     count = j["count"];
   }            
-//   string src=j["source"]; 
-//             
-//   string tgt=j["target"]; 
-
   if (j.find("source") != j.end()) {
     lang_src = j["source"];
   } else {
@@ -194,9 +186,10 @@ void rest_server::fetchParamWithDefault(const nlohmann::json& j,
   } else {
     throw std::runtime_error("`domain` value is null");
   }
+  if (_debug_mode != 0) cerr << "[DEBUG]\t" << currentDateTime() << "\tdomain:\t" << domain << "\tsource:\t" << lang_src << "\ttarget:\t" << lang_tgt << "\tthreshold:\t" << threshold << "\tdebug:\t" << debugmode << "\tcount:\t" << count  << endl;
 }
 
-bool rest_server::askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode)
+bool rest_server::askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, int debugmode)
 {
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
     {
@@ -216,26 +209,34 @@ bool rest_server::askTranslation(std::string &text, std::string &tokenized_text,
     std::string tokenized_tmp;
     for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
     {
-        if (l_inc==0) tokenized_tmp=tokenized_vec[l_inc];
+        if ((int)tokenized_tmp.size() == 0) tokenized_tmp=tokenized_vec[l_inc];
         else tokenized_tmp=tokenized_tmp+" "+tokenized_vec[l_inc];
 //         tokenized_tmp.push_back(tokenized_vec[l_inc]);
-        if (l_inc == (int)tokenized_vec.size()-1 || ((int)tokenized_vec[l_inc].size() == 1 && (tokenized_vec[l_inc].find("▁.")==0 || tokenized_vec[l_inc].find("▁!")==0  || tokenized_vec[l_inc].find("▁...")==0  || tokenized_vec[l_inc].find("▁?")==0 || tokenized_vec[l_inc].compare("\n")==0)))
+        if (l_inc == (int)tokenized_vec.size()-1 || tokenized_vec[l_inc].compare("▁.")==0 || tokenized_vec[l_inc].compare("▁!")==0  || tokenized_vec[l_inc].compare("▁...")==0  || tokenized_vec[l_inc].compare("▁?")==0 || tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("!")==0  || tokenized_vec[l_inc].compare("...")==0  || tokenized_vec[l_inc].compare("?")==0 || tokenized_vec[l_inc].compare("\n")==0)
         {
             tokenized_batched.push_back(tokenized_tmp);
             tokenized_tmp.clear();
         }
     }
-    if (_debug_mode != 0 ) cerr << "LOG: "<< currentDateTime() << "\t" << "BATCH SIZE:\t" << (int)tokenized_batched.size() << endl;
     if ((int)tokenized_tmp.size() > 0)
     {
         tokenized_batched.push_back(tokenized_tmp);
     }    
+    if (_debug_mode != 0 ) 
+    {
+        cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH SIZE:\t" << (int)tokenized_batched.size() << endl;
+        for (int l_inc=0; l_inc < (int)tokenized_batched.size(); l_inc++)
+        {
+            cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH CONTENT:\t" << l_inc << "\t"<< tokenized_batched[l_inc] << endl;
+        }
+    }
     return askTranslation(tokenized_batched, output, domain, lang_src, lang_tgt, debugmode);
 }
 
-bool rest_server::askTranslation(vector<string> &input, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode)
+bool rest_server::askTranslation(vector<string> &input, json &output, string &domain, string &lang_src, string &lang_tgt, int debugmode)
 {
     vector<string > translation_output ;
+    vector<string > translation_raw_output ;
     vector<string > alignement_output_scores ;
     vector<float > translation_scores ;
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
@@ -247,10 +248,11 @@ bool rest_server::askTranslation(vector<string> &input, json &output, string &do
         cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain+lang_src+lang_tgt` values are not valid ("+domain+","+lang_src+"->"+lang_tgt+") for TRANSLATION" << endl;
         return false;
     }
-    if ((*it_translation)->NMTTranslateBatch(input, translation_output, translation_scores, alignement_output_scores))
+    if ((*it_translation)->NMTTranslateBatch(input, translation_output, translation_raw_output, translation_scores, alignement_output_scores))
     {
         output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_output));
         output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), translation_scores));
+        if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("raw_translation"), translation_raw_output));
         if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("translation_alignements"), alignement_output_scores));
         return true;
     }

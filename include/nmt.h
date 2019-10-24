@@ -79,8 +79,8 @@ class nmt
         ~nmt(){delete(_spm_src);delete(_spm_tgt);};
         nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
         bool LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
-        bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
-        bool NMTTranslateBatch(std::vector< std::string >& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
+        bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
+        bool NMTTranslateBatch(std::vector< std::string >& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
         bool getLocal();
         Status NMTBatch(std::vector<std::vector<std::string> >& batch_tokens, std::vector<std::vector<std::string> >& output_batch_tokens, std::string domain);        
         bool CheckModelsStatus();

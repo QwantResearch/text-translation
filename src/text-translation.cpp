@@ -33,7 +33,7 @@ void usage() {
           "\t--tgt (-o)                target language\n"
           "\t--spm (-m)                sentencepiece model filename\n"
           "\t--model_config_path (-c)  model_config_path file in which API configuration is set (needed)\n"
-          "\t--server_host (-s)        TFServing host (needed)\n"
+          "\t--server_host (-s)        TFServing host (needed with tf serving)\n"
           "\t--tensorflow_serving (-f) Ask tensorflow serving (marian translation server is default)\n"
           "\t--help (-h)               Show this message\n"
        << endl;
@@ -150,9 +150,9 @@ void ProcessArgs(int argc, char **argv) {
       break;
     }
   }
-  if (model_config_path == "" || server_host == "") {
-    cerr << "[ERROR]\t" << currentDateTime() << "\tError, you must set a model_config_path "
-         << "and a server_host" << endl;
+  if (model_config_path == "") {
+    cerr << "[ERROR]\t" << currentDateTime() << "\tError, you must set a model_config_path "<< endl;
+//          << "and a server_host" << endl;
     usage();
     exit(1);
   }
@@ -233,15 +233,18 @@ int main(int argc, char **argv) {
   cout << "[INFO]\t" << currentDateTime() << "\tUsing translation server host " << server_host << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing Source Language " << source_language << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing Target Language " << target_language << endl;
-  cout << "[INFO]\t" << currentDateTime() << "\tUsing sentencepiece model " << sentencepiece_model_filename << endl;
+//   cout << "[INFO]\t" << currentDateTime() << "\tUsing sentencepiece model " << sentencepiece_model_filename << endl;
   cout << "[INFO]\t" << currentDateTime() << "\tUsing tensorflow serving " << tensorflow_serving_type << endl;
+  cout << "[INFO]\t" << currentDateTime() << "\tDebug mode " << debug << endl;
 
   unique_ptr<AbstractServer> nmt_api;
 
-  if (server_type == 0) {
+  if (server_type == 0) 
+  {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing REST API" << endl;
-    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, server_host, sentencepiece_model_filename, source_language, target_language, num_port, tensorflow_serving_type, debug));
-  } else {
+//     nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, server_host, sentencepiece_model_filename, source_language, target_language, num_port, tensorflow_serving_type, debug));
+    nmt_api = std::unique_ptr<rest_server>(new rest_server(model_config_path, num_port, debug));
+    } else {
     cout << "[INFO]\t" << currentDateTime() << "\tUsing gRPC API" << endl;
     nmt_api = std::unique_ptr<grpc_server>(new grpc_server(model_config_path, server_host, sentencepiece_model_filename, source_language, target_language, num_port, tensorflow_serving_type, debug));
   }

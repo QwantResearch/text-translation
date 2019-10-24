@@ -141,7 +141,7 @@ bool nmt::LoadModel(std::string model_name_param, std::string& address_server, s
 }
 
 
-bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
+bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
 {
     std::string message;
     try
@@ -182,6 +182,8 @@ bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::str
         int inc_data=1;
         if ((int)translation_output.size()==inc_hyp) translation_output.push_back(spm_detokenize_str(data[inc_data]));
         else translation_output[inc_hyp]=translation_output[inc_hyp]+" "+(spm_detokenize_str(data[inc_data]));
+        if ((int)translation_raw_output.size()==inc_hyp) translation_raw_output.push_back(data[inc_data]);
+        else translation_raw_output[inc_hyp]=translation_raw_output[inc_hyp]+" "+data[inc_data];
         inc_data++;
         if ((int)data.size() > 4)
         {
@@ -200,12 +202,12 @@ bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::str
 
 }
 
-bool nmt::NMTTranslateBatch(std::vector< std::string>& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
+bool nmt::NMTTranslateBatch(std::vector< std::string>& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
 {
     int inc_hyp=0;
     while (inc_hyp < (int)batch_sentence_to_translate.size())
     {
-        NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, output_translation_scores, output_alignement_scores);
+        NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, translation_raw_output, output_translation_scores, output_alignement_scores);
         inc_hyp++;
     }
     return true;

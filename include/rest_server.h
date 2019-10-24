@@ -36,8 +36,6 @@ public:
   void shutdown() override;
 
 private:
-  int _debug_mode;
-  int _nbr_threads;
   std::shared_ptr<Http::Endpoint> httpEndpoint;
   Rest::Router router;
   typedef std::mutex Lock;
@@ -61,10 +59,10 @@ private:
                               string& lang_tgt, 
                               int& count,
                               float& threshold,
-                              bool& debugmode);
+                              int& debugmode);
 
-  bool askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode);
-  bool askTranslation(vector<string > &input, json &output, string &domain, string &lang_src, string &lang_tgt, bool debugmode);
+  bool askTranslation(std::string &text, std::string &tokenized_text, json &output, string &domain, string &lang_src, string &lang_tgt, int debugmode);
+  bool askTranslation(vector<string > &input, json &output, string &domain, string &lang_src, string &lang_tgt, int debugmode);
 
   void writeLog(string text_to_log) {}
 

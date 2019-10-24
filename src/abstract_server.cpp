@@ -19,14 +19,16 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
     _num_port = num_port;
 //     _model_config_path = model_config_path;
 //     _tfserving_host = tfserving_host;
+    cout << "[INFO]\t" << currentDateTime() << "\tConfig file:\t" << config_file << endl;
+    cout << "[INFO]\t" << currentDateTime() << "\tPort number:\t" << _num_port << endl;
+    cout << "[INFO]\t" << currentDateTime() << "\tDebug mode:\t" << _debug_mode << endl;
     std::string line;
     YAML::Node config;
-
     try 
     {
     // Reading the configuration file for filling the options.
         config = YAML::LoadFile(config_file);
-        cout << "[INFO]\tDomain\t\tLocation/filename\t\tlanguage"<< endl;
+        cout << "[INFO]\t" << currentDateTime() << "\tDomain\t\tLocation/filename\t\tlanguage"<< endl;
 //        _num_port =  config["port"].as<int>() ;
         YAML::Node modelconfig = config["models"]; 
         for (const auto& modelnode: modelconfig)
@@ -40,17 +42,19 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
             try 
             {
                 nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, lang_src,lang_tgt,false);
+                nmt_pointer->setDebugMode(_debug_mode);
                 _list_translation_model.push_back(nmt_pointer);
-                cout << "\t===> loaded" << endl;
+                cout << "[INFO]\t" << currentDateTime() << "\t" << domain << "\t" <<  nmt_model_end_point << "\t" <<  spm_model_filename << "\t" <<  lang_src << "\t" <<  lang_tgt << "\t===> loaded" << endl;
             } 
             catch (invalid_argument& inarg) 
             {
-                cerr << "[ERROR]\t" << inarg.what() << endl;
+                cerr << "[ERROR]\t" << currentDateTime() << "\t" << domain << "\t" <<  nmt_model_end_point << "\t" <<  spm_model_filename << "\t" <<  lang_src << "\t" <<  lang_tgt << endl;
+                cerr << "[ERROR]\t" << currentDateTime() << "\t" << inarg.what() << endl;
                 continue;
             }
         }
     } catch (YAML::BadFile& bf) {
-      cerr << "[ERROR]\t" << bf.what() << endl;
+      cerr << "[ERROR]\t" << currentDateTime() << "\t" << bf.what() << endl;
       exit(1);
     }
 
