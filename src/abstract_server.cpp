@@ -33,8 +33,9 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
         YAML::Node modelconfig = config["models"]; 
         for (const auto& modelnode: modelconfig)
         {
-            std::string domain=modelnode.first.as<std::string>();
+            //std::string domain=modelnode.first.as<std::string>();
             YAML::Node modelinfos = modelnode.second;
+            std::string domain=modelinfos["domain"].as<std::string>();
             std::string nmt_model_end_point="ws://"+modelinfos["nmt_model_address"].as<std::string>()+":"+modelinfos["nmt_model_port"].as<std::string>()+"/translate";
             std::string spm_model_filename=modelinfos["spm_model"].as<std::string>();
             std::string lang_src=modelinfos["source_language"].as<std::string>();

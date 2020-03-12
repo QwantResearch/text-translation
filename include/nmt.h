@@ -88,6 +88,7 @@ class nmt
         std::vector<std::string> getDomains();
         std::string getLangSrc(){return _lang_src;};
         std::string getLangTgt(){return _lang_tgt;};
+        std::string getLangPair(){return _lang_src+"-"+_lang_tgt;};
         std::vector <std::string> tokenize(std::string &input);
         std::string tokenize_str(std::string &input);
         std::string spm_segment(std::string &input);

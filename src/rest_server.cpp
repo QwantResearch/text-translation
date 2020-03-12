@@ -50,7 +50,7 @@ void rest_server::doTranslationGet(const Rest::Request &request,
     if (inc > 0)
       response_string.append(",");
     response_string.append("\"");
-    response_string.append(_list_translation_model.at(inc)->getDomain());
+    response_string.append(_list_translation_model.at(inc)->getLangPair()+"-"+_list_translation_model.at(inc)->getDomain());
     response_string.append("\"");
   }
   response_string.append("]}");
