@@ -9,6 +9,7 @@ debug: 1
 
 models:
   translation_name:
+    domain: sample_model
     nmt_model_address: localhost
     nmt_model_port: 8080
     spm_model: resources/spm.model.sample
