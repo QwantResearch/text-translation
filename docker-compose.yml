@@ -1,0 +1,30 @@
+version: "3"
+services:
+  nmt:
+    image: text-translation:latest
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./models:/models
+    environment:
+      API_NMT_SERVER_HOST: tensorflow_serving:8500
+      API_NMT_THREADS: 1
+      API_NMT_PORT: 9009
+      API_NMT_CONFIG: /models/models.config
+      API_NMT_SENTENCE_PIECE_MODEL:/models/spm.model.bin
+      # replace the xx by a valid value (e.g. fr for french)
+      API_NMT_SOURCE_LANGUAGE:xx
+      API_NMT_TARGET_LANGUAGE:xx 
+      API_NMT_GRPC: 0
+      API_NMT_DEBUG: 1
+      API_NMT_TENSORFLOW_SERVING: 1
+    depends_on:
+      - "tensorflow_serving"
+
+  tensorflow_serving:
+    image: "tensorflow/serving:latest"
+    volumes:
+      - ./models:/models
+    command: --model_config_file=/models/models.config
+    # We can't set MODEL_CONFIG_FILE environment variable:
+    # See https://github.com/tensorflow/serving/issues/1165

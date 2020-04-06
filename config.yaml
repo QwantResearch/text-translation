@@ -1,0 +1,17 @@
+# models:
+#  name of the model:
+#    intent_model: file localization
+#    nlu_model: adress:port
+#    language: language of the model (for tokenization)
+port: 9009
+threads: 2
+debug: 1
+
+models:
+  translation_name:
+    domain: sample_model
+    nmt_model_address: localhost
+    nmt_model_port: 8080
+    spm_model: resources/spm.model.sample
+    source_language: fr
+    target_language: en
