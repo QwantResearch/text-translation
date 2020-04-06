@@ -45,17 +45,61 @@ void rest_server::doTranslationGet(const Rest::Request &request,
       "GET, POST, DELETE, OPTIONS");
   response.headers().add<Http::Header::AccessControlAllowOrigin>("*");
   response.headers().add<Http::Header::ContentType>(MIME(Application, Json));
-  string response_string = "{\"nmt-domains\":[";
-  for (int inc = 0; inc < (int)_list_translation_model.size(); inc++) {
-    if (inc > 0)
-      response_string.append(",");
-    response_string.append("\"");
-    response_string.append(_list_translation_model.at(inc)->getLangPair()+"-"+_list_translation_model.at(inc)->getDomain());
-    response_string.append("\"");
+  
+  nlohmann::json response_json;
+  
+  nlohmann::json languages_json;
+  for (int inc = 0; inc < (int)_list_translation_model.size(); inc++) 
+  {
+    vector<string> lang_src_vec = _list_translation_model.at(inc)->getLangSrcVec();
+    vector<string> lang_tgt_vec = _list_translation_model.at(inc)->getLangTgtVec();
+    nlohmann::json language_src_json;
+    for (int inc_src = 0; inc_src < (int)lang_src_vec.size(); inc_src++) 
+    {
+        std::vector<std::pair<string,string>> list_pair_tgt_domain_to_add;
+        nlohmann::json language_tgt_json;
+        for (int inc_tgt = 0; inc_tgt < (int)lang_tgt_vec.size(); inc_tgt++) 
+        {
+            list_pair_tgt_domain_to_add.push_back(std::pair<string,string>(lang_tgt_vec[inc_tgt], _list_translation_model.at(inc)->getDomain()));
+        }
+        auto languages_json_iter_src = languages_json.find(lang_src_vec[inc_src]);
+        if (languages_json_iter_src ==  languages_json.end())
+        {
+            auto it = list_pair_tgt_domain_to_add.begin();
+            while (it != list_pair_tgt_domain_to_add.end())
+            {
+                nlohmann::json language_tgt_json;
+                std::vector<std::string> tmp_domains={it->second};
+                language_tgt_json.push_back(nlohmann::json::object_t::value_type(it->first, tmp_domains));
+                languages_json.push_back(nlohmann::json::object_t::value_type(string(lang_src_vec[inc_src]), language_tgt_json));
+                it++;
+            }
+        }
+        else
+        {
+            auto it = list_pair_tgt_domain_to_add.begin();
+            while (it != list_pair_tgt_domain_to_add.end())
+            {
+                auto languages_json_iter_tgt = languages_json_iter_src->find(it->first);
+                if (languages_json_iter_tgt == languages_json_iter_src->end())
+                {
+                    std::vector<std::string> tmp_domains={it->second};
+                    languages_json_iter_src->push_back(nlohmann::json::object_t::value_type(it->first, tmp_domains));
+                }
+                else
+                {
+                    languages_json_iter_tgt->push_back(it->second);
+                }
+                it++;
+            }
+        }
+    }
   }
-  response_string.append("]}");
+  response_json.push_back(nlohmann::json::object_t::value_type(string("languages"), languages_json));
+  string response_string = response_json.dump();
   if (_debug_mode != 0)
     cerr << "[DEBUG]\t" << currentDateTime() << "\tRESPONSE\t" << response_string << endl;
+  
   response.send(Pistache::Http::Code::Ok, response_string);
 }
 
@@ -193,7 +237,7 @@ bool rest_server::askTranslation(std::string &text, std::string &tokenized_text,
 {
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
     {
-        return (l_nmt->getDomain() == domain && l_nmt->getLangSrc() == lang_src && l_nmt->getLangTgt() == lang_tgt);
+        return (l_nmt->getDomain() == domain && l_nmt->isSrcLang(lang_src) && l_nmt->isTgtLang(lang_tgt));
     }); 
     if (it_translation == _list_translation_model.end())
     {
@@ -241,7 +285,7 @@ bool rest_server::askTranslation(vector<string> &input, json &output, string &do
     vector<float > translation_scores ;
     auto it_translation = std::find_if(_list_translation_model.begin(), _list_translation_model.end(), [&](nmt* l_nmt) 
     {
-        return (l_nmt->getDomain() == domain && l_nmt->getLangSrc() == lang_src && l_nmt->getLangTgt() == lang_tgt);
+        return (l_nmt->getDomain() == domain && l_nmt->isSrcLang(lang_src) && l_nmt->isTgtLang(lang_tgt));
     }); 
     if (it_translation == _list_translation_model.end())
     {

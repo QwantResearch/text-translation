@@ -78,7 +78,9 @@ class nmt
         nmt();
         ~nmt(){delete(_spm_src);delete(_spm_tgt);};
         nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
+        nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, std::vector<std::string> lang_src_vec, std::vector<std::string> lang_tgt_vec, bool tensorflow_serving_type);
         bool LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, bool tensorflow_serving_type);
+        bool LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, std::vector<std::string> lang_src_vec, std::vector<std::string> lang_tgt_vec, bool tensorflow_serving_type);
         bool NMTTranslate(std::string& sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
         bool NMTTranslateBatch(std::vector< std::string >& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores);
         bool getLocal();
@@ -88,12 +90,16 @@ class nmt
         std::vector<std::string> getDomains();
         std::string getLangSrc(){return _lang_src;};
         std::string getLangTgt(){return _lang_tgt;};
+        std::vector<std::string> getLangSrcVec(){return _lang_src_vec;};
+        std::vector<std::string> getLangTgtVec(){return _lang_tgt_vec;};
         std::string getLangPair(){return _lang_src+"-"+_lang_tgt;};
         std::vector <std::string> tokenize(std::string &input);
         std::string tokenize_str(std::string &input);
         std::string spm_segment(std::string &input);
         std::string detokenize_str(std::string& input);
         std::string spm_detokenize_str(std::string& input);
+        bool isSrcLang(std::string& lang);
+        bool isTgtLang(std::string& lang);
         void setDebugMode(int debug_mode);
         
     private:
@@ -106,6 +112,8 @@ class nmt
       string _address;
       string _lang_src;
       string _lang_tgt;
+      std::vector<std::string> _lang_src_vec;
+      std::vector<std::string> _lang_tgt_vec; 
       
       static std::map<tensorflow::serving::ModelVersionStatus_State, std::string> mapState;
 
