@@ -39,14 +39,18 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
             std::string nmt_model_end_point="ws://"+modelinfos["nmt_model_address"].as<std::string>()+":"+modelinfos["nmt_model_port"].as<std::string>()+"/translate";
             std::string spm_model_filename=modelinfos["spm_model"].as<std::string>();
             YAML::Node source_languages = modelinfos["source_languages"]; 
+            std::vector<std::string> source_languages_vec;
+            std::vector<std::string> target_languages_vec;
             for (std::size_t i=0;i<source_languages.size();i++) 
             {
-                std::cerr << source_languages[i].as<string>() << "\n";
+                source_languages_vec.push_back(source_languages[i].as<string>());
+//                 std::cerr << source_languages[i].as<string>() << "\n";
             }
             YAML::Node target_languages = modelinfos["target_languages"]; 
             for (std::size_t i=0;i<target_languages.size();i++) 
             {
-                std::cerr << target_languages[i].as<string>() << "\n";
+                target_languages_vec.push_back(target_languages[i].as<string>());
+//                 std::cerr << target_languages[i].as<string>() << "\n";
             }
 //             std::string lang_src=modelinfos["source_languages"].as< std::vector < std::string> >();
 //             std::string lang_tgt=modelinfos["target_languages"].as< std::vector < std::string> >();
@@ -55,7 +59,8 @@ AbstractServer::AbstractServer(std::string &config_file,  int num_port, int debu
             
             try 
             {
-                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, processing_lang_src, processing_lang_tgt, false);
+//                 nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, processing_lang_src, processing_lang_tgt, false);
+                nmt* nmt_pointer = new nmt(domain, nmt_model_end_point, spm_model_filename, processing_lang_src, processing_lang_tgt, source_languages_vec, target_languages_vec, false);
                 nmt_pointer->setDebugMode(_debug_mode);
                 _list_translation_model.push_back(nmt_pointer);
                 cout << "[INFO]\t" << currentDateTime() << "\t" << domain << "\t" <<  nmt_model_end_point << "\t" <<  spm_model_filename << "\t" <<  processing_lang_src << "\t" <<  processing_lang_tgt << "\t===> loaded" << endl;

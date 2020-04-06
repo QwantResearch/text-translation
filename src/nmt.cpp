@@ -116,6 +116,10 @@ nmt::nmt(std::string& model_name_param, std::string& address_server, std::string
 {
     LoadModel(model_name_param,address_server,spm_file_model,lang_src,lang_tgt, tensorflow_serving_type);
 }
+nmt::nmt(std::string& model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, std::vector<std::string> lang_src_vec, std::vector<std::string> lang_tgt_vec, bool tensorflow_serving_type)
+{
+    LoadModel(model_name_param,address_server,spm_file_model,lang_src,lang_tgt, lang_src_vec, lang_tgt_vec, tensorflow_serving_type);
+}
 nmt::nmt()
 {
     cerr << "Warning: NMT object is empty" <<endl;
@@ -138,6 +142,43 @@ bool nmt::LoadModel(std::string model_name_param, std::string& address_server, s
     _lang_tgt=lang_tgt;
     _spm_src=new spm(spm_file_model);
     return true;
+}
+
+bool nmt::LoadModel(std::string model_name_param, std::string& address_server, std::string& spm_file_model, std::string& lang_src, std::string& lang_tgt, std::vector<std::string> lang_src_vec, std::vector<std::string> lang_tgt_vec, bool tensorflow_serving_type)
+{
+    _is_model_tfserving=tensorflow_serving_type;
+    _model_name=model_name_param;
+    _address=address_server;
+    _local=false;
+    _lang_src=lang_src;
+    _lang_tgt=lang_tgt;
+    _lang_src_vec=lang_src_vec;
+    _lang_tgt_vec=lang_tgt_vec;
+    _spm_src=new spm(spm_file_model);
+    return true;
+}
+
+
+bool nmt::isSrcLang(std::string& lang)
+{
+    auto lang_it = _lang_src_vec.begin();
+    while (lang_it != _lang_src_vec.end())
+    {
+        if (lang.compare((*lang_it)) == 0) return true;
+        lang_it++;
+    }
+    return false;
+}
+
+bool nmt::isTgtLang(std::string& lang)
+{
+    auto lang_it = _lang_tgt_vec.begin();
+    while (lang_it != _lang_tgt_vec.end())
+    {
+        if (lang.compare((*lang_it)) == 0) return true;
+        lang_it++;
+    }
+    return false;
 }
 
 
