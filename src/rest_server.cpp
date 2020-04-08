@@ -133,7 +133,6 @@ void rest_server::doTranslationPost(const Rest::Request &request,
       cerr << "[DEBUG]\t" << currentDateTime() << "\t" << "ASK TRANSLATION:\t" << j << endl;
     askTranslation(text, tokenized, j, domain, lang_src, lang_tgt, debugmode);
     j.push_back(nlohmann::json::object_t::value_type(string("tokenized"), tokenized));
-
     std::string s = j.dump();
     if (_debug_mode != 0)
       cerr << "[DEBUG]\t" << currentDateTime() << "\tRESPONSE\t" << s << endl;
@@ -246,32 +245,35 @@ bool rest_server::askTranslation(std::string &text, std::string &tokenized_text,
     }
     
     tokenized_text = (*it_translation)->tokenize_str(text);
-    std::string tokenized_text_sp = (*it_translation)->spm_segment(tokenized_text);
-    std::vector<std::string> tokenized_vec;
-    Split(tokenized_text_sp,tokenized_vec," ");
     vector< std::string > tokenized_batched ;
-    std::string tokenized_tmp;
-    for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
+    if ((int)tokenized_text.size() > 1)
     {
-        if ((int)tokenized_tmp.size() == 0) tokenized_tmp=tokenized_vec[l_inc];
-        else tokenized_tmp=tokenized_tmp+" "+tokenized_vec[l_inc];
-//         tokenized_tmp.push_back(tokenized_vec[l_inc]);
-        if (l_inc == (int)tokenized_vec.size()-1 || tokenized_vec[l_inc].compare("▁.")==0 || tokenized_vec[l_inc].compare("▁!")==0  || tokenized_vec[l_inc].compare("▁...")==0  || tokenized_vec[l_inc].compare("▁?")==0 || tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("!")==0  || tokenized_vec[l_inc].compare("...")==0  || tokenized_vec[l_inc].compare("?")==0 || tokenized_vec[l_inc].compare("\n")==0)
+        std::string tokenized_text_sp = (*it_translation)->spm_segment(tokenized_text);
+        std::vector<std::string> tokenized_vec;
+        Split(tokenized_text_sp,tokenized_vec," ");
+        std::string tokenized_tmp;
+        for (int l_inc=0; l_inc < (int)tokenized_vec.size(); l_inc++)
+        {
+            if ((int)tokenized_tmp.size() == 0) tokenized_tmp=tokenized_vec[l_inc];
+            else tokenized_tmp=tokenized_tmp+" "+tokenized_vec[l_inc];
+    //         tokenized_tmp.push_back(tokenized_vec[l_inc]);
+            if (l_inc == (int)tokenized_vec.size()-1 || tokenized_vec[l_inc].compare("▁.")==0 || tokenized_vec[l_inc].compare("▁!")==0  || tokenized_vec[l_inc].compare("▁...")==0  || tokenized_vec[l_inc].compare("▁?")==0 || tokenized_vec[l_inc].compare(".")==0 || tokenized_vec[l_inc].compare("!")==0  || tokenized_vec[l_inc].compare("...")==0  || tokenized_vec[l_inc].compare("?")==0 || tokenized_vec[l_inc].compare("\n")==0)
+            {
+                tokenized_batched.push_back(tokenized_tmp);
+                tokenized_tmp.clear();
+            }
+        }
+        if ((int)tokenized_tmp.size() > 0)
         {
             tokenized_batched.push_back(tokenized_tmp);
-            tokenized_tmp.clear();
-        }
-    }
-    if ((int)tokenized_tmp.size() > 0)
-    {
-        tokenized_batched.push_back(tokenized_tmp);
-    }    
-    if (_debug_mode != 0 ) 
-    {
-        cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH SIZE:\t" << (int)tokenized_batched.size() << endl;
-        for (int l_inc=0; l_inc < (int)tokenized_batched.size(); l_inc++)
+        }    
+        if (_debug_mode != 0 ) 
         {
-            cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH CONTENT:\t" << l_inc << "\t"<< tokenized_batched[l_inc] << endl;
+            cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH SIZE:\t" << (int)tokenized_batched.size() << endl;
+            for (int l_inc=0; l_inc < (int)tokenized_batched.size(); l_inc++)
+            {
+                cerr << "[DEBUG]\t"<< currentDateTime() << "\t" << "BATCH CONTENT:\t" << l_inc << "\t"<< tokenized_batched[l_inc] << endl;
+            }
         }
     }
     return askTranslation(tokenized_batched, output, domain, lang_src, lang_tgt, debugmode);
@@ -292,14 +294,19 @@ bool rest_server::askTranslation(vector<string> &input, json &output, string &do
         cerr << "[ERROR]\t" << currentDateTime() << "\tRESPONSE\t" << "`domain+lang_src+lang_tgt` values are not valid ("+domain+","+lang_src+"->"+lang_tgt+") for TRANSLATION" << endl;
         return false;
     }
-    if ((*it_translation)->NMTTranslateBatch(input, translation_output, translation_raw_output, translation_scores, alignement_output_scores))
+    if ((int)input.size() > 0)
     {
-        output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_output));
-        output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), translation_scores));
-        if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("raw_translation"), translation_raw_output));
-        if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("translation_alignements"), alignement_output_scores));
-        return true;
+        if ((*it_translation)->NMTTranslateBatch(input, translation_output, translation_raw_output, translation_scores, alignement_output_scores))
+        {
+            output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_output));
+            output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), translation_scores));
+            if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("raw_translation"), translation_raw_output));
+            if ((int)alignement_output_scores.size() > 0) output.push_back(nlohmann::json::object_t::value_type(string("translation_alignements"), alignement_output_scores));
+            return true;
+        }
     }
+    output.push_back(nlohmann::json::object_t::value_type(string("translation"), translation_output));
+    output.push_back(nlohmann::json::object_t::value_type(string("translation_scores"), translation_scores));
     return false;
 }
 

@@ -246,6 +246,7 @@ bool nmt::NMTTranslate(std::string& sentence_to_translate, std::vector< std::str
 bool nmt::NMTTranslateBatch(std::vector< std::string>& batch_sentence_to_translate, std::vector< std::string >& translation_output, std::vector< std::string >& translation_raw_output, std::vector< float >& output_translation_scores, std::vector< std::string >& output_alignement_scores)
 {
     int inc_hyp=0;
+    if ((int)batch_sentence_to_translate.size() == 0) return false;
     while (inc_hyp < (int)batch_sentence_to_translate.size())
     {
         NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, translation_raw_output, output_translation_scores, output_alignement_scores);
