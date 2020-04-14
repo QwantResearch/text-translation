@@ -94,7 +94,9 @@ class nmt
         std::vector<std::string> getLangTgtVec(){return _lang_tgt_vec;};
         std::string getLangPair(){return _lang_src+"-"+_lang_tgt;};
         std::vector <std::string> tokenize(std::string &input);
+        std::vector <std::string> tokenize(std::string &input, std::string &lang);
         std::string tokenize_str(std::string &input);
+        std::string tokenize_str(std::string &input, std::string &lang);
         std::string spm_segment(std::string &input);
         std::string detokenize_str(std::string& input);
         std::string spm_detokenize_str(std::string& input);

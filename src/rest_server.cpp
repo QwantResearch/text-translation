@@ -245,7 +245,7 @@ bool rest_server::askTranslation(std::string &text, std::string &tokenized_text,
         return false;
     }
     
-    tokenized_text = (*it_translation)->tokenize_str(text);
+    tokenized_text = (*it_translation)->tokenize_str(text,lang_src);
     std::string tokenized_text_sp = (*it_translation)->spm_segment(tokenized_text);
     std::vector<std::string> tokenized_vec;
     Split(tokenized_text_sp,tokenized_vec," ");

@@ -248,8 +248,12 @@ bool nmt::NMTTranslateBatch(std::vector< std::string>& batch_sentence_to_transla
     int inc_hyp=0;
     while (inc_hyp < (int)batch_sentence_to_translate.size())
     {
-        NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, translation_raw_output, output_translation_scores, output_alignement_scores);
-        inc_hyp++;
+        if (NMTTranslate(batch_sentence_to_translate[inc_hyp], translation_output, translation_raw_output, output_translation_scores, output_alignement_scores)) inc_hyp++;
+        else 
+        {
+            cerr << "[ERROR]\t" << currentDateTime() << " while translating the request: " << batch_sentence_to_translate[inc_hyp] << endl;
+            return false;
+        }
     }
     return true;
 }
@@ -265,6 +269,22 @@ std::vector <std::string> nmt::tokenize(std::string &input)
 std::string nmt::tokenize_str(std::string &input)
 {
         tokenizer * tokenizer_tmp = new tokenizer(_lang_src,false);
+        std::string to_return = tokenizer_tmp->tokenize_str(input);
+        delete(tokenizer_tmp);
+        return to_return;
+}
+
+std::vector <std::string> nmt::tokenize(std::string &input, std::string &lang)
+{
+        tokenizer * tokenizer_tmp = new tokenizer(lang,false);
+        std::vector <std::string> to_return = tokenizer_tmp->tokenize(input);
+        delete(tokenizer_tmp);
+        return to_return;
+}
+
+std::string nmt::tokenize_str(std::string &input, std::string &lang)
+{
+        tokenizer * tokenizer_tmp = new tokenizer(lang,false);
         std::string to_return = tokenizer_tmp->tokenize_str(input);
         delete(tokenizer_tmp);
         return to_return;
